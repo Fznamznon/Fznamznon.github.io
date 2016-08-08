@@ -52,7 +52,7 @@ function Complex_Motion(name) {
 //var point_finger_flexion = new Complex_Motion("point_finger_flexion");
 
 
-var humerus = new Bone("test2.asc", null, true, null, [] );
+var humerus = new Bone("output.txt", null, true, null, [] );
 
 /*var elbow_flexion = new Motion([0.226046935824, 0.191039945763, 0.955199728815],
     0.0,
