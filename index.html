@@ -6,6 +6,8 @@
 
     <script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
     <script type="text/javascript" src="Bone.js"></script>
+    <script type="text/javascript" src="model.js"></script>
+    <script type="text/javascript" src="catmull-clark.js"></script>
     <!-- include the jQuery and jQuery UI scripts -->
     <script src="jquery-2.1.1.js"></script>
     <script src="jquery-ui.js"></script>
@@ -102,7 +104,7 @@
                     (b4[0] - b1[0]) * (y - b1[1]) * (b2[2] - b1[2]) -
                     (z - b1[2]) * (b4[1] - b1[1]) * (b2[0] - b1[0]) -
                     (x - b1[0]) * (b2[1] - b1[1]) * (b4[2] - b1[2]);
-            //coords.push(det / maindet);
+
             m3 = det / maindet;
             det = (b2[0] - b1[0]) * (b3[1] - b1[1]) * (z - b1[2]) +
                     (b2[1] - b1[1]) * (b3[2] - b1[2]) * (x - b1[0]) +
@@ -110,8 +112,7 @@
                     (x - b1[0]) * (b3[1] - b1[1]) * (b2[2] - b1[2]) -
                     (b3[2] - b1[2]) * (y - b1[1]) * (b2[0] - b1[0]) -
                     (b3[0] - b1[0]) * (b2[1] - b1[1]) * (z - b1[2]);
-            //coords.push(det / maindet);
-            //coords.push(1 - coords[0] - coords[1] - coords[2]);
+
             m4 = det / maindet;
             m1 = 1 - m2 - m3 - m4;
             coords.push(m1);
@@ -236,204 +237,7 @@
         }
 
 
-        function getNormal(a, b, c, vertexPositions)
-        {
-            var v1x = vertexPositions[3 * b] - vertexPositions[3 * a];
-            var v1y = vertexPositions[3 * b + 1] - vertexPositions[3 * a + 1];
-            var v1z = vertexPositions[3 * b + 2] - vertexPositions[3 * a + 2];
 
-            var v2x = vertexPositions[3 * c] - vertexPositions[3 * a];
-            var v2y = vertexPositions[3 * c + 1] - vertexPositions[3 * a + 1];
-            var v2z = vertexPositions[3 * c + 2] - vertexPositions[3 * a + 2];
-
-
-            var r = [];
-            r.push(v1y * v2z - v2y * v1z);
-            r.push(v1z * v2x - v2z * v1x);
-            r.push(v1x * v2y - v2x * v1y);
-            var res = [];
-            vec3.normalize(r, res);
-
-            return res;
-
-        }
-
-        function setNormal(a, normal, normalBuffer) {
-            normalBuffer[3 * a] = normal[0];
-            normalBuffer[3 * a + 1] = normal[1];
-            normalBuffer[3 * a + 2] = normal[2];
-        }
-
-        function parse(data, bone) {
-            var lines = data.split("\n");
-
-            var counts = lines[0].split(" ");
-
-            var v = parseInt(counts[0]);
-            var ed = parseInt(counts[1]);
-            var f = parseInt(counts[2]);
-
-
-            var edges = [];
-
-
-
-            for (i = 1; i <= v; ++i) {
-                var val = lines[i].split(/\s+/);
-
-                for (j = 0; j < val.length - 1; ++j) {
-                    vertexPositions.push(parseFloat(val[j]));
-                    j++;
-                    vertexPositions.push(parseFloat(val[j]));
-                    j++;
-                    vertexPositions.push(parseFloat(val[j]));
-                }
-            }
-            for (i = v + 1; i <= v + ed; ++i) {
-                var val = lines[i].split(/\s+/);
-                for (j = 0; j < val.length - 1; ++j){
-                    edges.push(parseInt(val[j]));
-                    j++;
-                    edges.push(parseInt(val[j]));
-                    j++;
-                }
-            }
-            for (i = v + ed + 1; i <= v + ed + f; ++i) {
-                var val = lines[i].split(/\s+/);
-                if (val[0] != 'f') continue;
-                var figure_type = parseInt(val[1]);
-                var a = [];
-                var NormalA, NormalB, NormalC;
-                var e, ind;
-                switch (figure_type)
-                {
-                    case 3:
-
-                        for (j = 2; j <= 4; ++j)
-                        {
-                            e = parseInt(val[j]);
-                            ind = (e >= 0)? e * 2 : (-1 * e - 1) * 2 + 1;
-                            triangleBuffer.push(edges[ind]);
-                            a.push(edges[ind]);
-                        }
-
-                        NormalA = getNormal(a[0], a[2], a[1], vertexPositions);
-                        setNormal(a[0], NormalA, normalBuffer);
-                            
-                        NormalB = getNormal(a[1], a[0], a[2], vertexPositions);
-                        setNormal(a[1], NormalB, normalBuffer);
-                            
-                        NormalC = getNormal(a[2], a[1], a[0], vertexPositions);
-                        setNormal(a[2], NormalC, normalBuffer);
-
-                        break;
-                    case 4:
-                        e = [];
-                        var q = -1;
-                        for (j = 2; j <= 5; ++j)
-                        {
-                            e.push(parseInt(val[j]));
-                            q++;
-                            ind = (e[q] > 0)? e[q] * 2 : (-1 * e[q] - 1) * 2 + 1;
-                            //triangleBuffer.push(edges[ind]);
-                            a.push(edges[ind]);
-                        }
-                        triangleBuffer.push(a[0]);
-                        triangleBuffer.push(a[1]);
-                        triangleBuffer.push(a[2]);
-                        e.push(parseInt(val[5]));
-                        NormalA = getNormal(a[0], a[2], a[1], vertexPositions);
-                        setNormal(a[0], NormalA, normalBuffer);
-
-                        NormalB = getNormal(a[1], a[0], a[2], vertexPositions);
-                        setNormal(a[1], NormalB, normalBuffer);
-
-                        NormalC = getNormal(a[2], a[1], a[0], vertexPositions);
-                        setNormal(a[2], NormalC, normalBuffer);
-
-                        a[1] = a[2];
-                        a[2] = a[3];
-
-                        triangleBuffer.push(a[0]);
-                        triangleBuffer.push(a[1]);
-                        triangleBuffer.push(a[2]);
-
-                        NormalA = getNormal(a[0], a[2], a[1], vertexPositions);
-                        setNormal(a[0], NormalA, normalBuffer);
-
-                        NormalB = getNormal(a[1], a[0], [2], vertexPositions);
-                        setNormal(a[1], NormalB, normalBuffer);
-
-                        NormalC = getNormal(a[2], a[1], a[0], vertexPositions);
-                        setNormal(a[2], NormalC, normalBuffer);
-
-                        break;
-
-
-                }
-
-
-            }
-            vertexPositions.numItems = vertexPositions.length / 3;
-            triangleBuffer.numItems = triangleBuffer.length / 3;
-            bone.VertexPositionBuffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, bone.VertexPositionBuffer);
-
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexPositions), gl.STATIC_DRAW);
-
-            bone.VertexPositionBuffer.numItems = vertexPositions.numItems * 3;
-            bone.VertexPositionBuffer.itemSize = 3;
-
-
-            bone.VertexIndicesBuffer = gl.createBuffer();
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bone.VertexIndicesBuffer);
-            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(triangleBuffer), gl.STATIC_DRAW);
-            bone.VertexIndicesBuffer.numItems = triangleBuffer.numItems * 3;
-
-            bone.NormalBuffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, bone.NormalBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normalBuffer), gl.STATIC_DRAW);
-            bone.NormalBuffer.numItems = vertexPositions.numItems * 3;
-            bone.NormalBuffer.itemsize = 3;
-            //bone.VertexPositionBuffer.clear();
-            b1.push(vertexPositions[297 * 3]);
-            b1.push(vertexPositions[297 * 3 + 1]);
-            b1.push(vertexPositions[297 * 3 + 2]);
-
-            b2.push(vertexPositions[680 * 3]);
-            b2.push(vertexPositions[680 * 3 + 1]);
-            b2.push(vertexPositions[680 * 3 + 2]);
-
-            b3.push(vertexPositions[704 * 3]);
-            b3.push(vertexPositions[704 * 3 + 1]);
-            b3.push(vertexPositions[704 * 3 + 2]);
-
-            b4.push(vertexPositions[24 * 3]);
-            b4.push(vertexPositions[24 * 3 + 1]);
-            b4.push(vertexPositions[24 * 3 + 2]);
-            setBC();
-            console.log(BC[297 * 4]);
-            console.log(BC[297 * 4 + 1]);
-            console.log(BC[297 * 4 + 2]);
-            console.log(BC[297 * 4 + 3]);
-        }
-        function getBone(bone) {
-
-            var xmlhttp = new XMLHttpRequest();
-            xmlhttp.open("GET", bone.filename);
-
-
-            xmlhttp.onreadystatechange = function () {
-                if (xmlhttp.readyState == 4)
-                {
-                    //alert(xmlhttp.responseText);
-                    parse(xmlhttp.responseText, bone);
-                    console.log('received')
-                }
-            };
-            xmlhttp.send();
-
-        }
 
         var pMatrix = mat4.create();
         var mvMatrix = mat4.create();
@@ -514,43 +318,21 @@
         
         function drawBone(Bone)
         {
-            mvPushMatrix();
-            if (Bone.Joint != null) {
-
-                mat4.translate(mvMatrix, Bone.Joint.location);
-
-                mat4.rotate(mvMatrix, Bone.Joint.orientation[0], [1, 0, 0]);
-                mat4.rotate(mvMatrix, Bone.Joint.orientation[1], [0, 1, 0]);
-                mat4.rotate(mvMatrix, Bone.Joint.orientation[2], [0, 0, 1]);
-
-                if (Bone.Joint.movable){
-                    for (var j = 0; j < Bone.Joint.Motions.length; ++j) {
-                        mat4.rotate(mvMatrix, Bone.Joint.Motions[j].cur_value, Bone.Joint.Motions[j].axis);
-                    }
-                }
-            }
-
-            if (Bone.Visible) {
-                if (Bone.VertexIndicesBuffer == null || Bone.VertexPositionBuffer == null)
-                    return;
-                gl.bindBuffer(gl.ARRAY_BUFFER, Bone.VertexPositionBuffer);
-                gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, Bone.VertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+            if (Bone.GLVertexIndicesBuffer == null || Bone.GLVertexPositionBuffer == null)
+                return;
+            gl.bindBuffer(gl.ARRAY_BUFFER, Bone.GLVertexPositionBuffer);
+            gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, Bone.GLVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
 
-                gl.bindBuffer(gl.ARRAY_BUFFER, Bone.NormalBuffer);
-                gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, Bone.NormalBuffer.itemsize, gl.FLOAT, false, 0, 0);
+            gl.bindBuffer(gl.ARRAY_BUFFER, Bone.GLNormalBuffer);
+            gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, Bone.GLNormalBuffer.itemsize, gl.FLOAT, false, 0, 0);
 
-                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, Bone.VertexIndicesBuffer);
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, Bone.GLVertexIndicesBuffer);
 
-                setMatrixUniforms();
-                gl.drawElements(gl.TRIANGLES, Bone.VertexIndicesBuffer.numItems, gl.UNSIGNED_SHORT, 0);
-            }
-            var i = 0;
-            for (; i < Bone.Childs.length; ++i)
-            {
-                drawBone(Bone.Childs[i]);
-            }
-            mvPopMatrix();
+            setMatrixUniforms();
+            gl.drawElements(gl.TRIANGLES, Bone.GLVertexIndicesBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+
+
         }
         
         
@@ -589,17 +371,10 @@
 
 
 
-            drawBone(humerus);
-
-
-
+            drawBone(lv);
         }
 
-        function linAppr(x1, y1, x2, y2, t)
-        {
-            return y1 + (y2 - y1)/(x2 - x1)*(t - x1);
-        }
-        var time;
+
 
 
         function webGLStart() {
@@ -612,32 +387,14 @@
             initGL(canvas);
             initShaders();
 
-            for (i = 0; i < Bones.length; ++i)
-            {
-                if (Bones[i].Visible)
-                {
-                    getBone(Bones[i]);
-
-                }
-                if (Bones[i].Joint != null) {
-                    if (Bones[i].Joint.movable){
-                        var j = 0;
-                        for (; j < Bones[i].Joint.Motions.length; j++) {
-                            initSlider(Bones[i], i, j);
-                        }
-                        //j = 0;
-                    }
-                }
-            }
-            //testMotion();
-            for(i = 0; i < Compex_Motions.length; ++i)
-            {
-                initSliderForCompexMotion(Compex_Motions[i]);
+            for (var i = 0; i < Models.length; ++i) {
+                Models[i].initialize(gl);
             }
 
             gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
             gl.enable(gl.DEPTH_TEST);
+
 
             canvas.onmousedown = MouseDown;
             document.onmouseup = MouseUp;
@@ -646,6 +403,22 @@
 
             tick();
 
+        }
+
+        function testCatmull() {
+            var obj = catmullClark(lv.controlMesh.points, lv.controlMesh.cells, 1);
+            obj.points = [];
+            for (var i = 0; i < obj.positions.length; ++i) {
+                for (var j = 0; j < 3; ++j)
+                {
+                    obj.points.push(obj.positions[i][j]);
+                }
+            }
+            lv.currentMesh.points = obj.points;
+            lv.currentMesh.cells = obj.cells;
+            lv.convertToTriangles(lv.currentMesh);
+            lv.calcNormals(lv.currentMesh);
+            lv.refreshBuffers(gl);
         }
 
     </script>
@@ -663,6 +436,9 @@
         <div class="col-md-10" id = "SmallMotions">
             <div id = "dx"></div>
         </div>
+        <div class="col-md-offset-10 col-md-2">
+            <button type="button" onclick="testCatmull()" class="btn btn-primary">Пыщ</button>
+        </div>
 
     </div>
 </div>
@@ -676,12 +452,11 @@
         step: 0.001,
         value: 0,
         slide: function( event, ui ) {
-            b1[0] += 0.001;
-            b1[2] += 0.001;
+            lv.basis[0][0] += 0.001;
+            lv.basis[0][1] += 0.001;
             //b1[1] += ui.value;
 
             //T = ui.value;
-            refreshBuf(humerus);
         }
     }).slider("float");
 </script>

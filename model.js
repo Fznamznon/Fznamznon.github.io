@@ -1,0 +1,302 @@
+/**
+ * Created by Мария on 09.08.2016.
+ */
+var Models = [];
+function Model(filename, basis) {
+    this.controlMesh =
+    {
+        points : [],
+        cells : [],
+        triangles : [],
+        normals : [],
+        BC : []
+    }
+    this.currentMesh =
+    {
+        points : [],
+        cells : [],
+        triangles : [],
+        normals : [],
+        BC : []
+    }
+
+    this.filename = filename;
+    this.basis = basis;
+    this.GLVertexPositionBuffer = null;
+    this.GLVertexIndicesBuffer = null;
+    this.GLNormalBuffer = null;
+
+    
+    Models.push(this);
+
+    this.convertToTriangles = function(Mesh) {
+        var cells = Mesh.cells;
+        Mesh.triangles = [];
+        for (var i = 0; i < cells.length; ++i) {
+            if (cells[i].length == 3) {
+                Mesh.triangles.push(cells[i][0]);
+                Mesh.triangles.push(cells[i][1]);
+                Mesh.triangles.push(cells[i][2]);
+            }
+            if (cells[i].length == 4) {
+                Mesh.triangles.push(cells[i][0]);
+                Mesh.triangles.push(cells[i][1]);
+                Mesh.triangles.push(cells[i][2]);
+
+                Mesh.triangles.push(cells[i][0]);
+                Mesh.triangles.push(cells[i][2]);
+                Mesh.triangles.push(cells[i][3]);
+            }
+        }
+    }
+
+    this.getNormal = function(a, b, c, vertexPositions)
+    {
+        var v1x = vertexPositions[3 * b] - vertexPositions[3 * a];
+        var v1y = vertexPositions[3 * b + 1] - vertexPositions[3 * a + 1];
+        var v1z = vertexPositions[3 * b + 2] - vertexPositions[3 * a + 2];
+
+        var v2x = vertexPositions[3 * c] - vertexPositions[3 * a];
+        var v2y = vertexPositions[3 * c + 1] - vertexPositions[3 * a + 1];
+        var v2z = vertexPositions[3 * c + 2] - vertexPositions[3 * a + 2];
+
+
+        var r = [];
+        var module = Math.sqrt((v1y * v2z - v2y * v1z) * (v1y * v2z - v2y * v1z)  +
+            (v1z * v2x - v2z * v1x) * (v1z * v2x - v2z * v1x) +
+            (v1x * v2y - v2x * v1y) * (v1x * v2y - v2x * v1y));
+        r.push((v1y * v2z - v2y * v1z) / module);
+        r.push((v1z * v2x - v2z * v1x) / module);
+        r.push((v1x * v2y - v2x * v1y) / module);
+        
+        return r;
+
+    }
+
+    this.setNormal = function(a, normal, normalBuffer) {
+        normalBuffer[3 * a] = normal[0];
+        normalBuffer[3 * a + 1] = normal[1];
+        normalBuffer[3 * a + 2] = normal[2];
+    }
+
+    this.calcNormals = function(Mesh) {
+        var triangles = Mesh.triangles;
+        var points = Mesh.points;
+        var a, b, c;
+        var normal;
+        Mesh.normals = new Array(points.length);
+        for (var i = 0; i < triangles.length; i += 3) { 
+            a = triangles[i];
+            b = triangles[i + 1];
+            c = triangles[i + 2];
+            
+            normal = this.getNormal(a, c, b, points);
+            this.setNormal(a, normal, Mesh.normals);
+
+            normal = this.getNormal(b, a, c, points);
+            this.setNormal(b, normal, Mesh.normals);
+
+            normal = this.getNormal(c, b, a, points);
+            this.setNormal(c, normal, Mesh.normals);
+            
+        }
+    }
+
+    this.getBc = function(x, y, z){
+        var coords = [];
+        var b1 = this.basis[0];
+        var b2 = this.basis[1];
+        var b3 = this.basis[2];
+        var b4 = this.basis[3];
+        var m1, m2, m3, m4;
+        var maindet = (b2[0] - b1[0]) * (b3[1] - b1[1]) * (b4[2] - b1[2]) +
+            (b2[1] - b1[1]) * (b3[2] - b1[2]) * (b4[0] - b1[0]) +
+            (b3[0] - b1[0]) * (b4[1] - b1[1]) * (b2[2] - b1[2]) -
+            (b4[0] - b1[0]) * (b3[1] - b1[1]) * (b2[2] - b1[2]) -
+            (b3[2] - b1[2]) * (b4[1] - b1[1]) * (b2[0] - b1[0]) -
+            (b3[0] - b1[0]) * (b2[1] - b1[1]) * (b4[2] - b1[2]);
+        var det = (x - b1[0]) * (b3[1] - b1[1]) * (b4[2] - b1[2]) +
+            (y - b1[1]) * (b3[2] - b1[2]) * (b4[0] - b1[0]) +
+            (b3[0] - b1[0]) * (b4[1] - b1[1]) * (z - b1[2]) -
+            (b4[0] - b1[0]) * (b3[1] - b1[1]) * (z - b1[2]) -
+            (b3[2] - b1[2]) * (b4[1] - b1[1]) * (x - b1[0]) -
+            (b3[0] - b1[0]) * (y - b1[1]) * (b4[2] - b1[2]);
+        m2 = det / maindet;
+        det = (b2[0] - b1[0]) * (y - b1[1]) * (b4[2] - b1[2]) +
+            (b2[1] - b1[1]) * (z - b1[2]) * (b4[0] - b1[0]) +
+            (x - b1[0]) * (b4[1] - b1[1]) * (b2[2] - b1[2]) -
+            (b4[0] - b1[0]) * (y - b1[1]) * (b2[2] - b1[2]) -
+            (z - b1[2]) * (b4[1] - b1[1]) * (b2[0] - b1[0]) -
+            (x - b1[0]) * (b2[1] - b1[1]) * (b4[2] - b1[2]);
+
+        m3 = det / maindet;
+        det = (b2[0] - b1[0]) * (b3[1] - b1[1]) * (z - b1[2]) +
+            (b2[1] - b1[1]) * (b3[2] - b1[2]) * (x - b1[0]) +
+            (b3[0] - b1[0]) * (y - b1[1]) * (b2[2] - b1[2]) -
+            (x - b1[0]) * (b3[1] - b1[1]) * (b2[2] - b1[2]) -
+            (b3[2] - b1[2]) * (y - b1[1]) * (b2[0] - b1[0]) -
+            (b3[0] - b1[0]) * (b2[1] - b1[1]) * (z - b1[2]);
+
+        m4 = det / maindet;
+        m1 = 1 - m2 - m3 - m4;
+        coords.push(m1);
+        coords.push(m2);
+        coords.push(m3);
+        coords.push(m4);
+        return coords;
+    }
+
+    this.rtd = function(m1, m2, m3, m4){
+        var coords = [];
+        coords.push((m1 * b1[0] + m2 * b2[0] + m3 * b3[0] + m4 * b4[0]) / (m1 + m2 + m3 + m4));
+        coords.push((m1 * b1[1] + m2 * b2[1] + m3 * b3[1] + m4 * b4[1]) / (m1 + m2 + m3 + m4));
+        coords.push((m1 * b1[2] + m2 * b2[2] + m3 * b3[2] + m4 * b4[2]) / (m1 + m2 + m3 + m4));
+        return coords;
+    }
+
+    this.setBC = function(Mesh) {
+        for (i = 0; i < Mesh.points.length; i+=3)
+        {
+            var coords = this.getBc(Mesh.points[i], Mesh.points[i + 1], Mesh.points[i + 2]);
+            Mesh.BC.push(coords[0]);
+            Mesh.BC.push(coords[1]);
+            Mesh.BC.push(coords[2]);
+            Mesh.BC.push(coords[3]);
+        }
+    }
+    
+
+
+    this.setBuffers = function(gl) {
+
+        this.GLVertexPositionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.GLVertexPositionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.currentMesh.points), gl.STATIC_DRAW);
+
+        this.GLVertexPositionBuffer.numItems = this.currentMesh.points.length;
+        this.GLVertexPositionBuffer.itemSize = 3;
+
+
+        this.GLVertexIndicesBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.GLVertexIndicesBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.currentMesh.triangles), gl.STATIC_DRAW);
+        this.GLVertexIndicesBuffer.numItems = this.currentMesh.triangles.length;
+
+        this.GLNormalBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.GLNormalBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.currentMesh.normals), gl.STATIC_DRAW);
+        this.GLNormalBuffer.numItems = this.currentMesh.points.length;
+        this.GLNormalBuffer.itemsize = 3;
+    }
+
+    this.refreshBuffers = function(gl) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.GLVertexPositionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.currentMesh.points), gl.STATIC_DRAW);
+        this.GLVertexPositionBuffer.numItems = this.currentMesh.points.length;
+        this.GLVertexPositionBuffer.itemSize = 3;
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.GLVertexIndicesBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.currentMesh.triangles), gl.STATIC_DRAW);
+        this.GLVertexIndicesBuffer.numItems = this.currentMesh.triangles.length;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.GLNormalBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.currentMesh.normals), gl.STATIC_DRAW);
+        this.GLNormalBuffer.numItems = this.currentMesh.points.length;
+        this.GLNormalBuffer.itemsize = 3;
+    }
+    this.parseFile = function(data, gl) {
+        var lines = data.split("\n");
+        var counts = lines[0].split(" ");
+
+        var v = parseInt(counts[0]);
+        var ed = parseInt(counts[1]);
+        var f = parseInt(counts[2]);
+
+        var edges = [];
+
+        for (i = 1; i <= v; ++i) {
+            var val = lines[i].split(/\s+/);
+
+            for (j = 0; j < val.length - 1; ++j) {
+                this.controlMesh.points.push(parseFloat(val[j]));
+                j++;
+                this.controlMesh.points.push(parseFloat(val[j]));
+                j++;
+                this.controlMesh.points.push(parseFloat(val[j]));
+            }
+        }
+        for (i = v + 1; i <= v + ed; ++i) {
+            var val = lines[i].split(/\s+/);
+            for (j = 0; j < val.length - 1; ++j){
+                edges.push(parseInt(val[j]));
+                j++;
+                edges.push(parseInt(val[j]));
+                j++;
+            }
+        }
+        for (i = v + ed + 1; i <= v + ed + f; ++i) {
+            var val = lines[i].split(/\s+/);
+            if (val[0] != 'f') continue;
+            var figure_type = parseInt(val[1]);
+            var a = [];
+            var e, ind;
+
+            for (var j = 2; j < 2 + figure_type; ++j)
+            {
+                e = parseInt(val[j]);
+                ind = (e >= 0)? e * 2 : (-1 * e - 1) * 2 + 1;
+                a.push(edges[ind]);
+            }
+            this.controlMesh.cells.push(a);
+        }
+        this.convertToTriangles(this.controlMesh);
+        this.calcNormals(this.controlMesh);
+        this.currentMesh.cells = this.controlMesh.cells;
+        this.currentMesh.triangles = this.controlMesh.triangles;
+        this.currentMesh.normals = this.controlMesh.normals;
+        this.currentMesh.points = this.controlMesh.points;
+        this.setBuffers(gl);
+        if (this.basis == null){
+            var b1 = [];
+            var b2 = [];
+            var b3 = [];
+            var b4 = [];
+
+            b1.push(this.currentMesh.points[297 * 3]);
+
+            b1.push(this.currentMesh.points[297 * 3 + 1]);
+            b1.push(this.currentMesh.points[297 * 3 + 2]);
+
+            b2.push(this.currentMesh.points[680 * 3]);
+            b2.push(this.currentMesh.points[680 * 3 + 1]);
+            b2.push(this.currentMesh.points[680 * 3 + 2]);
+
+            b3.push(this.currentMesh.points[704 * 3]);
+            b3.push(this.currentMesh.points[704 * 3 + 1]);
+            b3.push(this.currentMesh.points[704 * 3 + 2]);
+
+            b4.push(this.currentMesh.points[24 * 3]);
+            b4.push(this.currentMesh.points[24 * 3 + 1]);
+            b4.push(this.currentMesh.points[24 * 3 + 2]);
+        }
+
+    };
+    
+    this.initialize = function(gl) {
+
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open("GET", this.filename);
+        var obj = this;
+        xmlhttp.onreadystatechange = function () {
+            if (xmlhttp.readyState == 4)
+            {
+                
+                //alert(xmlhttp.responseText);
+                obj.parseFile(xmlhttp.responseText, gl);
+                console.log('received')
+            }
+        };
+        xmlhttp.send();
+    }
+}
+
+var lv = new Model("output.txt", null);
