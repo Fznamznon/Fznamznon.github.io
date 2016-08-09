@@ -171,6 +171,7 @@ function _catmullClark(positions, cells) {
             edgeObject.points[1].edges.add(edgeObject);
 
 
+
             faceEdges.push(edgeObject);
         }
 
@@ -188,6 +189,7 @@ function _catmullClark(positions, cells) {
         var count = 0;
 
         // add face points of edge.
+
         for (var i = 0; i < edge.faces.length; ++i) {
             var facePoint = edge.faces[i].facePoint;
             //vec3.add(avg, facePoint, avg);
@@ -233,25 +235,40 @@ function _catmullClark(positions, cells) {
      */
     for (var i = 0; i < positions.length / 3; ++i) {
 
+
         var point = originalPoints[i];
         var n = point.faces.length;
         var newPoint = [0, 0, 0];
 
-        for (var j = 0; j < point.faces.length; ++j) {
-            var facePoint = point.faces[j].facePoint;
-            //vec3.add(newPoint, newPoint, facePoint);
-            addvec(newPoint, facePoint);
+        if (n != point.edges.size){
+            addvec(newPoint, point.point);
+            var cnt = 1;
+            for (var edge of point.edges) {
+                if (edge.faces.length == 1) {
+                    addvec(newPoint, edge.midPoint);
+                    cnt++;
+                }
+            }
+            multvec(newPoint, 1.0 / cnt);
         }
+        else {
 
-        for (var edge of point.edges) {
-            _mad(newPoint, newPoint, edge.midPoint, 2);
+            for (var j = 0; j < point.faces.length; ++j) {
+                var facePoint = point.faces[j].facePoint;
+                //vec3.add(newPoint, newPoint, facePoint);
+                addvec(newPoint, facePoint);
+            }
+
+            for (var edge of point.edges) {
+                _mad(newPoint, newPoint, edge.midPoint, 2);
+            }
+            //vec3.scale(newPoint, newPoint, 1.0 / n);
+            multvec(newPoint, 1.0 / n);
+            _mad(newPoint, newPoint, point.point, n - 3);
+
+            //vec3.scale(newPoint, newPoint, 1.0 / n);
+            multvec(newPoint, 1.0 / n);
         }
-        //vec3.scale(newPoint, newPoint, 1.0 / n);
-        multvec(newPoint, 1.0 / n);
-        _mad(newPoint, newPoint, point.point, n - 3);
-
-        //vec3.scale(newPoint, newPoint, 1.0 / n);
-        multvec(newPoint, 1.0 / n);
         point.newPoint = newPoint
 
     }
