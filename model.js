@@ -148,6 +148,10 @@ function Model(filename, basis) {
 
     this.rtd = function(m1, m2, m3, m4){
         var coords = [];
+        var b1 = basis[0];
+        var b2 = basis[1];
+        var b3 = basis[2];
+        var b4 = basis[3];
         coords.push((m1 * b1[0] + m2 * b2[0] + m3 * b3[0] + m4 * b4[0]) / (m1 + m2 + m3 + m4));
         coords.push((m1 * b1[1] + m2 * b2[1] + m3 * b3[1] + m4 * b4[1]) / (m1 + m2 + m3 + m4));
         coords.push((m1 * b1[2] + m2 * b2[2] + m3 * b3[2] + m4 * b4[2]) / (m1 + m2 + m3 + m4));
@@ -155,6 +159,7 @@ function Model(filename, basis) {
     }
 
     this.setBC = function(Mesh) {
+        Mesh.BC = [];
         for (i = 0; i < Mesh.points.length; i+=3)
         {
             var coords = this.getBc(Mesh.points[i], Mesh.points[i + 1], Mesh.points[i + 2]);
@@ -218,10 +223,13 @@ function Model(filename, basis) {
 
             for (j = 0; j < val.length - 1; ++j) {
                 this.controlMesh.points.push(parseFloat(val[j]));
+                this.currentMesh.points.push(parseFloat(val[j]));
                 j++;
                 this.controlMesh.points.push(parseFloat(val[j]));
+                this.currentMesh.points.push(parseFloat(val[j]));
                 j++;
                 this.controlMesh.points.push(parseFloat(val[j]));
+                this.currentMesh.points.push(parseFloat(val[j]));
             }
         }
         for (i = v + 1; i <= v + ed; ++i) {
@@ -247,15 +255,15 @@ function Model(filename, basis) {
                 a.push(edges[ind]);
             }
             this.controlMesh.cells.push(a);
+            this.currentMesh.cells.push(a);
         }
         this.convertToTriangles(this.controlMesh);
+        this.convertToTriangles(this.currentMesh);
         this.calcNormals(this.controlMesh);
-        this.currentMesh.cells = this.controlMesh.cells;
-        this.currentMesh.triangles = this.controlMesh.triangles;
-        this.currentMesh.normals = this.controlMesh.normals;
-        this.currentMesh.points = this.controlMesh.points;
+        this.calcNormals(this.currentMesh);
         this.setBuffers(gl);
-        if (this.basis == null){
+        if (this.basis.length == 0){
+
             var b1 = [];
             var b2 = [];
             var b3 = [];
@@ -277,9 +285,15 @@ function Model(filename, basis) {
             b4.push(this.currentMesh.points[24 * 3]);
             b4.push(this.currentMesh.points[24 * 3 + 1]);
             b4.push(this.currentMesh.points[24 * 3 + 2]);
+            this.basis.push(b1);
+            this.basis.push(b2);
+            this.basis.push(b3);
+            this.basis.push(b4);
         }
+        this.setBC(this.currentMesh);
+        this.setBC(this.controlMesh);
 
-    };
+    }
     
     this.initialize = function(gl) {
 
@@ -297,6 +311,21 @@ function Model(filename, basis) {
         };
         xmlhttp.send();
     }
+    
+    this.changeBasis = function()
+    {
+        this.currentMesh.points = [];
+        BC = this.currentMesh.BC;
+        for (var i = 0; i < BC.length; i += 4)
+        {
+            var coords = this.rtd(BC[i], BC[i + 1], BC[i + 2], BC[i + 3]);
+            this.currentMesh.points.push(coords[0]);
+            this.currentMesh.points.push(coords[1]);
+            this.currentMesh.points.push(coords[2]);
+        }
+        this.calcNormals(this.currentMesh);
+
+    }
 }
 
-var lv = new Model("output.txt", null);
+var lv = new Model("output.txt", []);
