@@ -434,11 +434,18 @@
 <canvas id="canvas"></canvas>
 <div id="container">
     <div class="row">
-        <div class="col-md-10" id = "SmallMotions">
+        <div class="col-md-5" id = "SmallMotions">
             <div id = "dx"></div>
         </div>
-        <div class="col-md-offset-10 col-md-2">
-            <button type="button" onclick="testCatmull()" class="btn btn-primary">Пыщ</button>
+        <div class="col-md-offset-5 col-md-5">
+            <form>
+                <p><b>Subdivisions:</b></p>
+                <p><input name="subd" type="radio" value="0" onchange="lv.updateSubdiv(this.value)"> Control mesh</p>
+                <p><input name="subd" type="radio" value="1" onchange="lv.updateSubdiv(this.value)"> 1 subdivision</p>
+                <p><input name="subd" type="radio" value="2" onchange="lv.updateSubdiv(this.value)"> 2 subdivision</p>
+
+            </form>
+
         </div>
 
     </div>

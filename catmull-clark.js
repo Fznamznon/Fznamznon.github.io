@@ -273,8 +273,9 @@ function _catmullClark(positions, cells) {
 
     }
 
-    newPositions = [];
+
     newCells = [];
+    newPoints = [];
 
     var index = 0;
 
@@ -285,7 +286,9 @@ function _catmullClark(positions, cells) {
     function getIndex(p) {
         if (!("index" in p)) {  
             p.index = index++;
-            newPositions.push([p[0], p[1], p[2]]);
+            newPoints.push(p[0]);
+            newPoints.push(p[1]);
+            newPoints.push(p[2]);
 
         }
         return p.index;
@@ -320,7 +323,7 @@ function _catmullClark(positions, cells) {
     }
 
 
-    return {positions: newPositions, cells: newCells};
+    return { points: newPoints, cells: newCells};
 
 }
 
@@ -331,10 +334,10 @@ function catmullClark(positions, cells, numSubdivisions) {
     }
 
 
-    var obj = {positions: positions, cells: cells};
+    var obj = {points: positions, cells: cells};
     for (var i = 0; i < numSubdivisions; ++i) {
 
-        obj = _catmullClark(obj.positions, obj.cells);
+        obj = _catmullClark(obj.points, obj.cells);
 
     }
 

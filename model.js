@@ -326,6 +326,37 @@ function Model(filename, basis) {
         this.calcNormals(this.currentMesh);
 
     }
+    this.returnToControlMesh = function() {
+        this.currentMesh.points = [];
+        this.currentMesh.normals= [];
+        this.currentMesh.triangles = [];
+        this.currentMesh.BC = [];
+        for (var i = 0; i < this.controlMesh.points.length; ++i) {
+            this.currentMesh.points.push(this.controlMesh.points[i]);
+            this.currentMesh.normals.push(this.controlMesh.normals[i]);
+        }
+        for (var i = 0; i < this.controlMesh.triangles.length; ++i) {
+            this.currentMesh.triangles.push(this.controlMesh.triangles[i]);
+        }
+        for (var i = 0; i < this.controlMesh.BC.length; ++i) {
+            this.currentMesh.BC.push(this.controlMesh.BC[i]);
+        }
+    }
+    this.updateSubdiv = function(numSubdivisions) {
+
+        if (numSubdivisions == 0)
+            this.returnToControlMesh();
+        else {
+            var obj = catmullClark(this.controlMesh.points, this.controlMesh.cells, numSubdivisions);
+            this.currentMesh.points = obj.points;
+            this.currentMesh.cells = obj.cells;
+            this.convertToTriangles(lv.currentMesh);
+            this.calcNormals(lv.currentMesh);
+            this.setBC(lv.currentMesh);
+        }
+
+        lv.refreshBuffers(gl);
+    }
 }
 
 var lv = new Model("output.txt", []);
