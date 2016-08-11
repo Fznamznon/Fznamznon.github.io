@@ -2,47 +2,47 @@
 <html>
 	<head>
 		<meta charset=utf-8>
-		<title>My first Three.js app</title>
+		<title>Heart model</title>
 		<script src="three.js"></script>
 		<script src="model.js"></script>
 		<script src="catmull-clark.js"></script>
 		<script src="TrackballControls.js"></script>
+		<script src="dat.gui.js"></script>
 		<style>
 			body { margin: 0; }
-			canvas { width: 80%; height: 100% }
+			canvas { width: 80%; height: 100%; }
 		</style>
 	</head>
 	<body>
 
 		<script>
 			var scene, camera, renderer;
-			var geometry, material, mesh;
+			var  mesh;
 			lv.initialize();
 			init();
-			animate();
 
 			function init() {
 
 			    scene = new THREE.Scene();
 
-			    camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.01, 10000 );
+			    camera = new THREE.PerspectiveCamera( 75, (window.innerWidth) / (window.innerHeight), 0.01, 10000 );
 			    //camera.position.z = 1000;
 
-				controls = new THREE.TrackballControls( camera );
+				control = new THREE.TrackballControls( camera );
 
-				controls.rotateSpeed = 5.0;
-				controls.zoomSpeed = 1.2;
-				controls.panSpeed = 0.8;
+				control.rotateSpeed = 5.0;
+				control.zoomSpeed = 1.2;
+				control.panSpeed = 0.8;
 
-				controls.noZoom = false;
-				controls.noPan = false;
+				control.noZoom = false;
+				control.noPan = false;
 
-				controls.staticMoving = true;
-				controls.dynamicDampingFactor = 0.3;
+				control.staticMoving = true;
+				control.dynamicDampingFactor = 0.3;
 
-				controls.keys = [ 65, 83, 68 ];
+				control.keys = [ 65, 83, 68 ];
 
-				controls.addEventListener( 'change', render );
+				control.addEventListener( 'change', render );
 
 				var spotLight1 = new THREE.SpotLight( 0xffffff );
 				spotLight1.position.set( -20, -20, -20 );
@@ -55,20 +55,62 @@
 				var ambientLight = new THREE.AmbientLight(0x404040);
 				scene.add(ambientLight);
 
-				lv.RefreshMesh(scene);
+				lv.refreshDisplay(scene);
 				//lv.updateSubdiv(1);
 				//lv.RefreshMesh(scene);
 			    renderer = new THREE.WebGLRenderer();
-			    renderer.setSize( window.innerWidth, window.innerHeight );
+
 				//renderer.setClearColorHex(0xEEEEEE);
 				//renderer.se
 
 				camera.position.z = 1;
 				camera.lookAt(scene.position);
+				renderer.setSize( window.innerWidth, window.innerHeight);
 
 			    document.body.appendChild( renderer.domElement );
 
+
 			}
+
+			var controls = new function() {
+				this.Control_Mesh = function () {
+					lv.returnToControlMesh();
+					lv.refreshDisplay(scene);
+				}
+				this.Subdivision_1 = function () {
+					lv.updateSubdiv(1);
+					lv.refreshDisplay(scene);
+				}
+				this.Subdivision_2 = function () {
+					lv.updateSubdiv(2);
+					lv.refreshDisplay(scene);
+				}
+				this.Without_Wireframe = function () {
+					lv.wireframeMode = 0;
+					lv.refreshDisplay(scene);
+				}
+				this.With_Wireframe = function () {
+					lv.wireframeMode = 1;
+					lv.refreshDisplay(scene);
+				}
+				this.Only_Wireframe = function () {
+					lv.wireframeMode = 2;
+					lv.refreshDisplay(scene);
+				}
+
+			};
+
+			var gui = new dat.GUI();
+			var f1 = gui.addFolder('Subdivisions');
+			f1.add(controls, 'Control_Mesh');
+			f1.add(controls, 'Subdivision_1');
+			f1.add(controls, 'Subdivision_2');
+			
+			var f2 = gui.addFolder('Wireframes');
+			f2.add(controls, 'Without_Wireframe');
+			f2.add(controls, 'With_Wireframe');
+			f2.add(controls, 'Only_Wireframe');
+
 			function render() {
 				renderer.render(scene, camera);
 			}
@@ -76,7 +118,7 @@
 			function animate() {
 
 			    requestAnimationFrame( animate );
-				controls.update();
+				control.update();
 				//mesh.rotation.x += 0.01;
 			    //mesh.rotation.y += 0.02;
 
@@ -84,6 +126,10 @@
 
 			}
 
+			animate();
+
 		</script>
+
+
 	</body>
 </html>

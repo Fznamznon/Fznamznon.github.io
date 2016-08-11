@@ -24,22 +24,17 @@ function Model(filename, basis) {
 
     this.filename = filename;
     this.basis = basis;
+    this.wireframeMode = 0;
     //this.GLVertexPositionBuffer = null;
     //this.GLVertexIndicesBuffer = null;
     //this.GLNormalBuffer = null;
     //this.BCbuf = null;
 
     this.mesh = null;
+    this.wireframe = null;
     Models.push(this);
 
-    this.RefreshMesh = function(scene) {
-        if (this.mesh != null)
-            scene.remove(this.mesh);
-        this.mesh = null;
-        var material = new THREE.MeshLambertMaterial( { color: 0xFF6666 } );
-
-
-
+    this.refreshMesh = function (scene, material) {
 
         var geometry = new THREE.BufferGeometry();
 
@@ -52,11 +47,37 @@ function Model(filename, basis) {
         geometry.addAttribute( 'normal', new THREE.BufferAttribute(normals , 3 ) );
 
         this.mesh = new THREE.Mesh( geometry, material );
-        //this.mesh = THREE.SceneUtils.createMultiMaterialObject(geometry, materials);
-        var wireframe = new THREE.WireframeHelper( this.mesh, 0x0000ff );
-        //wireframe.material.linewidth = 100500;
+    }
+
+    this.refreshDisplay = function(scene) {
+        if (this.mesh != null)
+            scene.remove(this.mesh);
+        if (this.wireframe != null)
+            scene.remove(this.wireframe);
+        this.mesh = null;
+        this.wireframe = null;
+        var material;
+
+        switch (this.wireframeMode){
+            case 0:
+                material = new THREE.MeshLambertMaterial( { color: 0xFF6666 } );
+                this.refreshMesh(scene, material);
+                break;
+            case 1:
+                material = new THREE.MeshLambertMaterial( { color: 0xFF6666 } );
+                this.refreshMesh(scene, material);
+                this.wireframe = new THREE.WireframeHelper( this.mesh, 0x0000ff );
+                scene.add(this.wireframe);
+                break;
+
+            case 2:
+                material = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true } );
+                this.refreshMesh(scene, material);
+                break;
+
+        }
+
         scene.add(this.mesh);
-        scene.add(wireframe);
 
     }
 
