@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>My first Three.js app</title>
+		<script src="three.js"></script>
+		<script src="model.js"></script>
+		<script src="catmull-clark.js"></script>
+		<script src="TrackballControls.js"></script>
+		<style>
+			body { margin: 0; }
+			canvas { width: 80%; height: 100% }
+		</style>
+	</head>
+	<body>
+
+		<script>
+			var scene, camera, renderer;
+			var geometry, material, mesh;
+			lv.initialize();
+			init();
+			animate();
+
+			function init() {
+
+			    scene = new THREE.Scene();
+
+			    camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.01, 10000 );
+			    //camera.position.z = 1000;
+
+				controls = new THREE.TrackballControls( camera );
+
+				controls.rotateSpeed = 5.0;
+				controls.zoomSpeed = 1.2;
+				controls.panSpeed = 0.8;
+
+				controls.noZoom = false;
+				controls.noPan = false;
+
+				controls.staticMoving = true;
+				controls.dynamicDampingFactor = 0.3;
+
+				controls.keys = [ 65, 83, 68 ];
+
+				controls.addEventListener( 'change', render );
+
+				var spotLight1 = new THREE.SpotLight( 0xffffff );
+				spotLight1.position.set( -20, -20, -20 );
+				scene.add(spotLight1 );
+
+				var spotLight1 = new THREE.SpotLight( 0xffffff );
+				spotLight1.position.set(20, 20, 20 );
+				scene.add(spotLight1 );
+
+				var ambientLight = new THREE.AmbientLight(0x404040);
+				scene.add(ambientLight);
+
+				lv.RefreshMesh(scene);
+				//lv.updateSubdiv(1);
+				//lv.RefreshMesh(scene);
+			    renderer = new THREE.WebGLRenderer();
+			    renderer.setSize( window.innerWidth, window.innerHeight );
+				//renderer.setClearColorHex(0xEEEEEE);
+				//renderer.se
+
+				camera.position.z = 1;
+				camera.lookAt(scene.position);
+
+			    document.body.appendChild( renderer.domElement );
+
+			}
+			function render() {
+				renderer.render(scene, camera);
+			}
+
+			function animate() {
+
+			    requestAnimationFrame( animate );
+				controls.update();
+				//mesh.rotation.x += 0.01;
+			    //mesh.rotation.y += 0.02;
+
+			    render();
+
+			}
+
+		</script>
+	</body>
+</html>
