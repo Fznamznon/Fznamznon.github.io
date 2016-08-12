@@ -17,9 +17,21 @@
 
 		<script>
 			var scene, camera, renderer;
-			var  mesh;
-			lv.initialize();
+			var currentModels = [];
+			//lv.initialize();
 			init();
+
+			function refreshScene() {
+				for (var i = 0; i < currentModels.length; ++i) {
+					currentModels[i].refreshDisplay(scene);
+				}
+			}
+
+			function clearScene() {
+				for (var i = 0; i < currentModels.length; ++i) {
+					currentModels[i].Hide(scene);
+				}
+			}
 
 			function init() {
 
@@ -55,9 +67,18 @@
 				var ambientLight = new THREE.AmbientLight(0x404040);
 				scene.add(ambientLight);
 
-				lv.refreshDisplay(scene);
+				//lv.refreshDisplay(scene);
 				//lv.updateSubdiv(1);
 				//lv.RefreshMesh(scene);
+
+				for (var i = 0; i < Models.length; ++i) {
+					Models[i].initialize();
+				}
+				currentModels.push(heart);
+				//currentModels.push(lv);
+
+				refreshScene();
+
 			    renderer = new THREE.WebGLRenderer();
 
 				//renderer.setClearColorHex(0xEEEEEE);
@@ -74,28 +95,53 @@
 
 			var controls = new function() {
 				this.Control_Mesh = function () {
-					lv.returnToControlMesh();
-					lv.refreshDisplay(scene);
+					for (var i = 0; i < currentModels.length; ++i) {
+						currentModels[i].returnToControlMesh();
+					}
+					refreshScene();
 				}
 				this.Subdivision_1 = function () {
-					lv.updateSubdiv(1);
-					lv.refreshDisplay(scene);
+					for (var i = 0; i < currentModels.length; ++i) {
+						currentModels[i].updateSubdiv(1);
+					}
+					refreshScene();
 				}
 				this.Subdivision_2 = function () {
-					lv.updateSubdiv(2);
-					lv.refreshDisplay(scene);
+					for (var i = 0; i < currentModels.length; ++i) {
+						currentModels[i].updateSubdiv(2);
+					}
+					refreshScene();
 				}
 				this.Without_Wireframe = function () {
-					lv.wireframeMode = 0;
-					lv.refreshDisplay(scene);
+					for (var i = 0; i < currentModels.length; ++i) {
+						currentModels[i].wireframeMode = 0;
+					}
+					refreshScene();
 				}
 				this.With_Wireframe = function () {
-					lv.wireframeMode = 1;
-					lv.refreshDisplay(scene);
+					for (var i = 0; i < currentModels.length; ++i) {
+						currentModels[i].wireframeMode = 1;
+					}
+					refreshScene();
 				}
 				this.Only_Wireframe = function () {
-					lv.wireframeMode = 2;
-					lv.refreshDisplay(scene);
+					for (var i = 0; i < currentModels.length; ++i) {
+						currentModels[i].wireframeMode = 2;
+					}
+					refreshScene();
+				}
+
+				this.Left_Ventricle = function () {
+					clearScene();
+					currentModels = [];
+					currentModels.push(lv);
+					refreshScene();
+				}
+				this.Heart = function () {
+					clearScene();
+					currentModels = [];
+					currentModels.push(heart);
+					refreshScene();
 				}
 
 			};
@@ -110,6 +156,10 @@
 			f2.add(controls, 'Without_Wireframe');
 			f2.add(controls, 'With_Wireframe');
 			f2.add(controls, 'Only_Wireframe');
+
+			var f3 = gui.addFolder('Models');
+			f3.add(controls, 'Left_Ventricle');
+			f3.add(controls, 'Heart');
 
 			function render() {
 				renderer.render(scene, camera);

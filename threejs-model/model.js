@@ -38,15 +38,22 @@ function Model(filename, basis) {
 
         var geometry = new THREE.BufferGeometry();
 
-        var vertices = new Float32Array(lv.currentMesh.points);
-        var indices = new Uint32Array( lv.currentMesh.triangles);
-        var normals = new Float32Array(lv.currentMesh.normals);
+        var vertices = new Float32Array(this.currentMesh.points);
+        var indices = new Uint32Array( this.currentMesh.triangles);
+        var normals = new Float32Array(this.currentMesh.normals);
         geometry.setIndex( new THREE.BufferAttribute( indices, 1 ) );
 
         geometry.addAttribute( 'position', new THREE.BufferAttribute(vertices , 3 ) );
         geometry.addAttribute( 'normal', new THREE.BufferAttribute(normals , 3 ) );
 
         this.mesh = new THREE.Mesh( geometry, material );
+    }
+
+    this.Hide = function(scene) {
+        if (this.mesh != null)
+            scene.remove(this.mesh);
+        if (this.wireframe != null)
+            scene.remove(this.wireframe);
     }
 
     this.refreshDisplay = function(scene) {
@@ -84,7 +91,7 @@ function Model(filename, basis) {
     this.convertToTriangles = function(Mesh) {
         var cells = Mesh.cells;
         Mesh.triangles = [];
-        Mesh.BCft = [];
+
         for (var i = 0; i < cells.length; ++i) {
             if (cells[i].length == 3) {
                 Mesh.triangles.push(cells[i][0]);
@@ -377,13 +384,14 @@ function Model(filename, basis) {
             var obj = catmullClark(this.controlMesh.points, this.controlMesh.cells, numSubdivisions);
             this.currentMesh.points = obj.points;
             this.currentMesh.cells = obj.cells;
-            this.convertToTriangles(lv.currentMesh);
-            this.calcNormals(lv.currentMesh);
-            this.setBC(lv.currentMesh);
+            this.convertToTriangles(this.currentMesh);
+            this.calcNormals(this.currentMesh);
+            this.setBC(this.currentMesh);
         }
 
         //lv.refreshBuffers(gl);
     }
 }
 
-var lv = new Model("heart.txt", []);
+var lv = new Model("output.txt", []);
+var heart = new Model("heart.txt", []);
