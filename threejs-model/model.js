@@ -47,6 +47,7 @@ function Model(filename, basis) {
         geometry.addAttribute( 'normal', new THREE.BufferAttribute(normals , 3 ) );
 
         this.mesh = new THREE.Mesh( geometry, material );
+        //this.mesh.doubleSided = true;
     }
 
     this.Hide = function(scene) {
@@ -68,10 +69,12 @@ function Model(filename, basis) {
         switch (this.wireframeMode){
             case 0:
                 material = new THREE.MeshLambertMaterial( { color: 0xFF6666 } );
+                material.side = THREE.DoubleSide;
                 this.refreshMesh(scene, material);
                 break;
             case 1:
                 material = new THREE.MeshLambertMaterial( { color: 0xFF6666 } );
+                material.side = THREE.DoubleSide;
                 this.refreshMesh(scene, material);
                 this.wireframe = new THREE.WireframeHelper( this.mesh, 0x0000ff );
                 scene.add(this.wireframe);
@@ -79,11 +82,11 @@ function Model(filename, basis) {
 
             case 2:
                 material = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true } );
+                material.side = THREE.DoubleSide;
                 this.refreshMesh(scene, material);
                 break;
 
         }
-
         scene.add(this.mesh);
 
     }
