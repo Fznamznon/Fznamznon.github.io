@@ -2,7 +2,7 @@
  * Created by Мария on 09.08.2016.
  */
 var Models = [];
-function Model(filename, basis) {
+function Model(filename, basis, color) {
     this.controlMesh =
     {
         points : [],
@@ -25,6 +25,9 @@ function Model(filename, basis) {
     this.filename = filename;
     this.basis = basis;
     this.wireframeMode = 0;
+    this.visible = true;
+    this.default_color = new THREE.Color(color);
+
     //this.GLVertexPositionBuffer = null;
     //this.GLVertexIndicesBuffer = null;
     //this.GLNormalBuffer = null;
@@ -68,15 +71,18 @@ function Model(filename, basis) {
 
         switch (this.wireframeMode){
             case 0:
-                material = new THREE.MeshLambertMaterial( { color: 0xFF6666 } );
+                material = new THREE.MeshLambertMaterial();
+                material.color = this.default_color;
                 material.side = THREE.DoubleSide;
                 this.refreshMesh(scene, material);
                 break;
             case 1:
-                material = new THREE.MeshLambertMaterial( { color: 0xFF6666 } );
+                material = new THREE.MeshLambertMaterial();
+                material.color = this.default_color;
+
                 material.side = THREE.DoubleSide;
                 this.refreshMesh(scene, material);
-                this.wireframe = new THREE.WireframeHelper( this.mesh, 0x0000ff );
+                this.wireframe = new THREE.WireframeHelper( this.mesh, 0x0000ff);
                 scene.add(this.wireframe);
                 break;
 
@@ -396,5 +402,8 @@ function Model(filename, basis) {
     }
 }
 
-var lv = new Model("output.txt", []);
-var heart = new Model("heart.txt", []);
+var lv = new Model("left_atrium.txt", [], "#c70000");
+var heart = new Model("heart.txt", [], "#bf4040");
+var rv = new Model("right_atrium.txt", [], "#335e92");
+var tricuspid = new Model("tricuspid_valve.txt", [], "#ffe6e6");
+var mitral = new Model("valve2.txt", [], "#ffe6e6");

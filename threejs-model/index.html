@@ -22,8 +22,11 @@
 			init();
 
 			function refreshScene() {
-				for (var i = 0; i < currentModels.length; ++i) {
-					currentModels[i].refreshDisplay(scene);
+				for (var i = 0; i < Models.length; ++i) {
+					if (Models[i].visible)
+						Models[i].refreshDisplay(scene);
+					else
+						Models[i].Hide(scene);
 				}
 			}
 
@@ -73,8 +76,9 @@
 
 				for (var i = 0; i < Models.length; ++i) {
 					Models[i].initialize();
+					//currentModels.push(Models[i]);
 				}
-				currentModels.push(heart);
+				//currentModels.push(heart);
 				//currentModels.push(lv);
 
 				refreshScene();
@@ -85,6 +89,8 @@
 				//renderer.se
 
 				camera.position.z = 2;
+				camera.position.y = 0.7	;
+				//camera.position.x = -0.5	;
 				camera.lookAt(scene.position);
 				renderer.setSize( window.innerWidth, window.innerHeight);
 
@@ -95,52 +101,74 @@
 
 			var controls = new function() {
 				this.Control_Mesh = function () {
-					for (var i = 0; i < currentModels.length; ++i) {
-						currentModels[i].returnToControlMesh();
+					for (var i = 0; i < Models.length; ++i) {
+						Models[i].returnToControlMesh();
 					}
 					refreshScene();
 				}
 				this.Subdivision_1 = function () {
-					for (var i = 0; i < currentModels.length; ++i) {
-						currentModels[i].updateSubdiv(1);
+					for (var i = 0; i < Models.length; ++i) {
+						Models[i].updateSubdiv(1);
 					}
 					refreshScene();
 				}
 				this.Subdivision_2 = function () {
-					for (var i = 0; i < currentModels.length; ++i) {
-						currentModels[i].updateSubdiv(2);
+					for (var i = 0; i < Models.length; ++i) {
+						Models[i].updateSubdiv(2);
 					}
 					refreshScene();
 				}
 				this.Without_Wireframe = function () {
-					for (var i = 0; i < currentModels.length; ++i) {
-						currentModels[i].wireframeMode = 0;
+					for (var i = 0; i < Models.length; ++i) {
+						Models[i].wireframeMode = 0;
 					}
 					refreshScene();
 				}
 				this.With_Wireframe = function () {
-					for (var i = 0; i < currentModels.length; ++i) {
-						currentModels[i].wireframeMode = 1;
+					for (var i = 0; i < Models.length; ++i) {
+						Models[i].wireframeMode = 1;
 					}
 					refreshScene();
 				}
 				this.Only_Wireframe = function () {
-					for (var i = 0; i < currentModels.length; ++i) {
-						currentModels[i].wireframeMode = 2;
+					for (var i = 0; i < Models.length; ++i) {
+						Models[i].wireframeMode = 2;
 					}
 					refreshScene();
 				}
-
+				this.Heart = function () {
+					if (heart.visible)
+							heart.visible = false;
+					else
+							heart.visible = true;
+					refreshScene();
+				};
 				this.Left_Ventricle = function () {
-					clearScene();
-					currentModels = [];
-					currentModels.push(lv);
+					if (lv.visible)
+						lv.visible = false;
+					else
+						lv.visible = true;
 					refreshScene();
 				}
-				this.Heart = function () {
-					clearScene();
-					currentModels = [];
-					currentModels.push(heart);
+				this.Right_Ventricle = function () {
+					if (rv.visible)
+						rv.visible = false;
+					else
+						rv.visible = true;
+					refreshScene();
+				}
+				this.Mitral_Valve = function () {
+					if (mitral.visible)
+						mitral.visible = false;
+					else
+						mitral.visible = true;
+					refreshScene();
+				}
+				this.Tricuspid_Valve = function () {
+					if (tricuspid.visible)
+						tricuspid.visible = false;
+					else
+						tricuspid.visible = true;
 					refreshScene();
 				}
 
@@ -158,10 +186,17 @@
 			f2.add(controls, 'Only_Wireframe');
 
 			var f3 = gui.addFolder('Models');
-			f3.add(controls, 'Left_Ventricle');
+
 			f3.add(controls, 'Heart');
+			f3.add(controls, 'Left_Ventricle');
+			f3.add(controls, 'Right_Ventricle');
+			f3.add(controls, 'Mitral_Valve');
+			f3.add(controls, 'Tricuspid_Valve');
+
+
 
 			function render() {
+				//refreshScene();
 				renderer.render(scene, camera);
 			}
 
