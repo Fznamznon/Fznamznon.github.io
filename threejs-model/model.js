@@ -407,3 +407,5 @@ var heart = new Model("heart.txt", [], "#bf4040");
 var rv = new Model("right_atrium.txt", [], "#335e92");
 var tricuspid = new Model("tricuspid_valve.txt", [], "#ffe6e6");
 var mitral = new Model("valve2.txt", [], "#ffe6e6");
+var heart_arteries = new Model("heart_arteries.txt", [], "#c70000");
+var heart_veins= new Model("heart_veins.txt", [], "#335e92");

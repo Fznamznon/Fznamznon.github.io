@@ -171,6 +171,20 @@
 						tricuspid.visible = true;
 					refreshScene();
 				}
+				this.Heart_Arteries = function () {
+					if (heart_arteries.visible)
+						heart_arteries.visible = false;
+					else
+						heart_arteries.visible = true;
+					refreshScene();
+				}
+				this.Heart_Veins = function () {
+					if (heart_veins.visible)
+						heart_veins.visible = false;
+					else
+						heart_veins.visible = true;
+					refreshScene();
+				}
 
 			};
 
@@ -192,6 +206,8 @@
 			f3.add(controls, 'Right_Ventricle');
 			f3.add(controls, 'Mitral_Valve');
 			f3.add(controls, 'Tricuspid_Valve');
+			f3.add(controls, 'Heart_Arteries');
+			f3.add(controls, 'Heart_Veins');
 
 
 
