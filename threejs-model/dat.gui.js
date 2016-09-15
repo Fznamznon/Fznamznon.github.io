@@ -1536,7 +1536,7 @@ dat.GUI = dat.gui.GUI = (function (css, saveDialogueContents, styleSheet, contro
   /** Outer-most className for GUI's */
   var CSS_NAMESPACE = 'dg';
 
-  var HIDE_KEY_CODE = 72;
+  var HIDE_KEY_CODE = 71;
 
   /** The only value shared between the JS and SCSS. Use caution. */
   var CLOSE_BUTTON_HEIGHT = 20;

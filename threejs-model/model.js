@@ -405,10 +405,14 @@ function Model(filename, name, color) {
     }
 }
 
-var lv = new Model("left_atrium.txt", "lv", "#c70000");
-var heart = new Model("heart.txt", "heart", "#bf4040");
-var rv = new Model("right_atrium.txt", "rv", "#335e92");
-var tricuspid = new Model("tricuspid_valve.txt", "tricuspid", "#ffe6e6");
-var mitral = new Model("valve2.txt", "mitral", "#ffe6e6");
-var heart_arteries = new Model("heart_arteries.txt", "ha", "#c70000");
-var heart_veins= new Model("heart_veins.txt", "hv", "#335e92");
+var la = new Model("Left_atrium2.txt", "Left_Atrium", "#c70000");
+var lv = new Model("Left_ventricle.txt", "Left_Ventricle", "#c70000");
+var aortha = new Model("Aortha.txt", "Aortha", "#c70000");
+var heart = new Model("heart.txt", "Heart", "#bf4040");
+var rv = new Model("Right_ventricle.txt", "Right_Ventricle", "#335e92");
+var ra = new Model("Right_atrium2.txt", "Right_Atrium", "#335e92");
+var pulmonary = new Model("Pulmonary.txt", "Pulmonary_Artery", "#335e92");
+var tricuspid = new Model("tricuspid_valve.txt", "Tricuspid_Valve", "#ffe6e6");
+var mitral = new Model("valve2.txt", "Mitral_Valve", "#ffe6e6");
+var heart_arteries = new Model("heart_arteries.txt", "Heart_Arteries", "#c70000");
+var heart_veins= new Model("heart_veins.txt", "Heart_Veins", "#335e92");

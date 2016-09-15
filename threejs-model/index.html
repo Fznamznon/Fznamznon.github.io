@@ -75,7 +75,31 @@
 
 			}
 
+			function getChar(event) {
+				if (event.which == null) { // IE
+					if (event.keyCode < 32) return null; // спец. символ
+					return String.fromCharCode(event.keyCode)
+				}
 
+				if (event.which != 0 && event.charCode != 0) { // все кроме IE
+					if (event.which < 32) return null; // спец. символ
+					return String.fromCharCode(event.which); // остальные
+				}
+
+				return null; // спец. символ
+			}
+			
+			function onKeyDown(event) {
+				if (getChar(event) == 'h'){
+					if (selected != null) {
+						if (selected.visible)
+							selected.visible = false;
+						else
+							selected.visible = true;
+						refreshScene();
+					}
+				}
+			}
 
 			function init() {
 
@@ -217,12 +241,49 @@
 						heart_veins.visible = true;
 					refreshScene();
 				}
+				this.Left_Atrium = function () {
+					if (la.visible)
+						la.visible = false;
+					else
+						la.visible = true;
+					refreshScene();
+				}
+				this.Aortha = function () {
+					if (aortha.visible)
+						aortha.visible = false;
+					else
+						aortha.visible = true;
+					refreshScene();
+				}
+				this.Right_Atrium = function () {
+					if (ra.visible)
+						ra.visible = false;
+					else
+						ra.visible = true;
+					refreshScene();
+				}
+				this.Pulmonary_Artery = function () {
+					if (pulmonary.visible)
+						pulmonary.visible = false;
+					else
+						pulmonary.visible = true;
+					refreshScene();
+				}
 				this.scolor = "#1861b3";
 				this.Name = "Null";
 				this.Default_color = function () {
 					if (selected != null){
 						selected.current_color = selected.default_color;
 						this.scolor = selected.current_color;
+					}
+				}
+				this.Hide_Selected = function () {
+					if (selected != null) {
+						if (selected.visible)
+							selected.visible = false;
+						else
+							selected.visible = true;
+						refreshScene();
 					}
 				}
 			};
@@ -242,7 +303,11 @@
 
 			f3.add(controls, 'Heart');
 			f3.add(controls, 'Left_Ventricle');
+			f3.add(controls, 'Left_Atrium');
+			f3.add(controls, 'Aortha');
 			f3.add(controls, 'Right_Ventricle');
+			f3.add(controls, 'Right_Atrium');
+			f3.add(controls, 'Pulmonary_Artery');
 			f3.add(controls, 'Mitral_Valve');
 			f3.add(controls, 'Tricuspid_Valve');
 			f3.add(controls, 'Heart_Arteries');
@@ -252,6 +317,7 @@
 			f4.add(controls, 'Name').listen();
 			f4.addColor(controls, 'scolor').listen();
 			f4.add(controls, 'Default_color');
+			f4.add(controls, 'Hide_Selected');
 			f4.open();
 
 			function render() {
@@ -298,6 +364,7 @@
 			window.addEventListener( 'mousemove', onMouseMove, false );
 			window.addEventListener( 'click', onMouseClick, false );
 			window.addEventListener( 'dblclick', onMouseDbClick, false );
+			window.addEventListener( 'keypress', onKeyDown, false );
 
 			animate();
 
