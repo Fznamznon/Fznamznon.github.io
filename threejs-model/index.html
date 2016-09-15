@@ -17,8 +17,12 @@
 
 		<script>
 			var scene, camera, renderer;
-			var currentModels = [];
-			//lv.initialize();
+			var raycaster = new THREE.Raycaster();
+			var mouse = new THREE.Vector2();
+			var control;
+			var selected;
+			var intersect;
+
 			init();
 
 			function refreshScene() {
@@ -30,20 +34,85 @@
 				}
 			}
 
-			function clearScene() {
-				for (var i = 0; i < currentModels.length; ++i) {
-					currentModels[i].Hide(scene);
+			function whatIsIt(mesh) {
+				for (var i = 0; i < Models.length; ++i) {
+					if (Models[i].mesh == mesh)
+							return Models[i];
 				}
+				return null;
 			}
+
+			function onMouseMove( event ) {
+
+				mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+				mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+			}
+			function onMouseClick( event ) {
+
+				if (intersect != null) {
+
+					selected = intersect;
+					//selected.current_color = [255, 255, 0];
+					selected.mesh.material.color = new THREE.Color(selected.current_color);
+					controls.scolor = "#" + selected.mesh.material.color.getHexString();
+					controls.Name = selected.name;
+
+				}
+
+			}
+			function onMouseDbClick( event ) {
+
+				if (selected != null)
+				{
+					if (controls.scolor == "#ffd700")
+					{
+						selected.current_color = selected.default_color
+					}
+				}
+				selected = null;
+				controls.Name = "Null";
+
+			}
+
+
 
 			function init() {
 
 			    scene = new THREE.Scene();
 
 			    camera = new THREE.PerspectiveCamera( 75, (window.innerWidth) / (window.innerHeight), 0.01, 10000 );
-			    //camera.position.z = 1000;
 
-				control = new THREE.TrackballControls( camera );
+
+				var spotLight1 = new THREE.SpotLight( 0xffffff );
+				spotLight1.position.set( -20, -20, -20 );
+				scene.add(spotLight1 );
+
+				var spotLight1 = new THREE.SpotLight( 0xffffff );
+				spotLight1.position.set(20, 20, 20 );
+				scene.add(spotLight1 );
+
+				var ambientLight = new THREE.AmbientLight(0x404040);
+				scene.add(ambientLight);
+
+
+				for (var i = 0; i < Models.length; ++i) {
+					Models[i].initialize();
+				}
+
+
+				refreshScene();
+
+			    renderer = new THREE.WebGLRenderer();
+
+				camera.position.z = 2;
+				camera.position.y = 0.7	;
+
+				camera.lookAt(scene.position);
+				renderer.setSize( window.innerWidth, window.innerHeight);
+
+			    document.body.appendChild( renderer.domElement );
+				control = new THREE.TrackballControls( camera, renderer.domElement );
 
 				control.rotateSpeed = 5.0;
 				control.zoomSpeed = 1.2;
@@ -58,43 +127,6 @@
 				control.keys = [ 65, 83, 68 ];
 
 				control.addEventListener( 'change', render );
-
-				var spotLight1 = new THREE.SpotLight( 0xffffff );
-				spotLight1.position.set( -20, -20, -20 );
-				scene.add(spotLight1 );
-
-				var spotLight1 = new THREE.SpotLight( 0xffffff );
-				spotLight1.position.set(20, 20, 20 );
-				scene.add(spotLight1 );
-
-				var ambientLight = new THREE.AmbientLight(0x404040);
-				scene.add(ambientLight);
-
-				//lv.refreshDisplay(scene);
-				//lv.updateSubdiv(1);
-				//lv.RefreshMesh(scene);
-
-				for (var i = 0; i < Models.length; ++i) {
-					Models[i].initialize();
-					//currentModels.push(Models[i]);
-				}
-				//currentModels.push(heart);
-				//currentModels.push(lv);
-
-				refreshScene();
-
-			    renderer = new THREE.WebGLRenderer();
-
-				//renderer.setClearColorHex(0xEEEEEE);
-				//renderer.se
-
-				camera.position.z = 2;
-				camera.position.y = 0.7	;
-				//camera.position.x = -0.5	;
-				camera.lookAt(scene.position);
-				renderer.setSize( window.innerWidth, window.innerHeight);
-
-			    document.body.appendChild( renderer.domElement );
 
 
 			}
@@ -185,7 +217,14 @@
 						heart_veins.visible = true;
 					refreshScene();
 				}
-
+				this.scolor = "#1861b3";
+				this.Name = "Null";
+				this.Default_color = function () {
+					if (selected != null){
+						selected.current_color = selected.default_color;
+						this.scolor = selected.current_color;
+					}
+				}
 			};
 
 			var gui = new dat.GUI();
@@ -209,10 +248,41 @@
 			f3.add(controls, 'Heart_Arteries');
 			f3.add(controls, 'Heart_Veins');
 
-
+			var f4 = gui.addFolder('Selected');
+			f4.add(controls, 'Name').listen();
+			f4.addColor(controls, 'scolor').listen();
+			f4.add(controls, 'Default_color');
+			f4.open();
 
 			function render() {
-				//refreshScene();
+
+				if (Models[0].wireframeMode != 1) {
+					raycaster.setFromCamera(mouse, camera);
+					var intersects = raycaster.intersectObjects(scene.children);
+					if (selected != null) {
+						var colorObj = new THREE.Color(controls.scolor);
+						selected.current_color = colorObj;
+
+					}
+					if (intersects.length > 0) {
+						var temp = intersect;
+						intersect = whatIsIt(intersects[0].object);
+						if (intersect != temp) {
+							intersect.mesh.material.color.addScalar(40.0 / 255.0);
+							if (temp != null)
+								temp.mesh.material.color = new THREE.Color(temp.current_color);
+						}
+					}
+					else {
+						intersect = null;
+					}
+
+					for (var i = 0; i < Models.length; i++) {
+						if (Models[i] != intersect)
+							Models[i].mesh.material.color = new THREE.Color(Models[i].current_color);
+					}
+
+				}
 				renderer.render(scene, camera);
 			}
 
@@ -220,12 +290,14 @@
 
 			    requestAnimationFrame( animate );
 				control.update();
-				//mesh.rotation.x += 0.01;
-			    //mesh.rotation.y += 0.02;
+
 
 			    render();
 
 			}
+			window.addEventListener( 'mousemove', onMouseMove, false );
+			window.addEventListener( 'click', onMouseClick, false );
+			window.addEventListener( 'dblclick', onMouseDbClick, false );
 
 			animate();
 

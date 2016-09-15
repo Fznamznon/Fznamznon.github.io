@@ -2,7 +2,7 @@
  * Created by Мария on 09.08.2016.
  */
 var Models = [];
-function Model(filename, basis, color) {
+function Model(filename, name, color) {
     this.controlMesh =
     {
         points : [],
@@ -23,19 +23,21 @@ function Model(filename, basis, color) {
     }
 
     this.filename = filename;
-    this.basis = basis;
+    this.basis = [];
     this.wireframeMode = 0;
     this.visible = true;
-    this.default_color = new THREE.Color(color);
-
+    this.default_color = color;
+    this.name = name;
+    this.current_color = color;
+    this.normal_color = color;
     //this.GLVertexPositionBuffer = null;
-    //this.GLVertexIndicesBuffer = null;
-    //this.GLNormalBuffer = null;
-    //this.BCbuf = null;
+
 
     this.mesh = null;
     this.wireframe = null;
     Models.push(this);
+
+    
 
     this.refreshMesh = function (scene, material) {
 
@@ -72,14 +74,15 @@ function Model(filename, basis, color) {
         switch (this.wireframeMode){
             case 0:
                 material = new THREE.MeshLambertMaterial();
-                material.color = this.default_color;
+                material.color = new THREE.Color(this.current_color);
+                //material.color = new THREE.Color(this.default_color.r, this.default_color.g, this.default_color.b);
                 material.side = THREE.DoubleSide;
                 this.refreshMesh(scene, material);
                 break;
             case 1:
                 material = new THREE.MeshLambertMaterial();
-                material.color = this.default_color;
-
+                //material.color = new THREE.Color(this.default_color.r, this.default_color.g, this.default_color.b);
+                material.color = new THREE.Color(this.current_color);
                 material.side = THREE.DoubleSide;
                 this.refreshMesh(scene, material);
                 this.wireframe = new THREE.WireframeHelper( this.mesh, 0x0000ff);
@@ -402,10 +405,10 @@ function Model(filename, basis, color) {
     }
 }
 
-var lv = new Model("left_atrium.txt", [], "#c70000");
-var heart = new Model("heart.txt", [], "#bf4040");
-var rv = new Model("right_atrium.txt", [], "#335e92");
-var tricuspid = new Model("tricuspid_valve.txt", [], "#ffe6e6");
-var mitral = new Model("valve2.txt", [], "#ffe6e6");
-var heart_arteries = new Model("heart_arteries.txt", [], "#c70000");
-var heart_veins= new Model("heart_veins.txt", [], "#335e92");
+var lv = new Model("left_atrium.txt", "lv", "#c70000");
+var heart = new Model("heart.txt", "heart", "#bf4040");
+var rv = new Model("right_atrium.txt", "rv", "#335e92");
+var tricuspid = new Model("tricuspid_valve.txt", "tricuspid", "#ffe6e6");
+var mitral = new Model("valve2.txt", "mitral", "#ffe6e6");
+var heart_arteries = new Model("heart_arteries.txt", "ha", "#c70000");
+var heart_veins= new Model("heart_veins.txt", "hv", "#335e92");
