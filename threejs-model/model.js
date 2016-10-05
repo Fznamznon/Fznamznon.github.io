@@ -29,15 +29,16 @@ function Model(filename, name, color) {
     this.default_color = color;
     this.name = name;
     this.current_color = color;
-    this.normal_color = color;
-    //this.GLVertexPositionBuffer = null;
+    //this.normal_color = color;
 
+    this.avgh = [0.0, 0.0, 0.0];
 
     this.mesh = null;
     this.wireframe = null;
     Models.push(this);
 
-    
+    this.geo = null;
+    this.contour = null;
 
     this.refreshMesh = function (scene, material) {
 
@@ -46,13 +47,17 @@ function Model(filename, name, color) {
         var vertices = new Float32Array(this.currentMesh.points);
         var indices = new Uint32Array( this.currentMesh.triangles);
         var normals = new Float32Array(this.currentMesh.normals);
+
         geometry.setIndex( new THREE.BufferAttribute( indices, 1 ) );
 
         geometry.addAttribute( 'position', new THREE.BufferAttribute(vertices , 3 ) );
         geometry.addAttribute( 'normal', new THREE.BufferAttribute(normals , 3 ) );
 
+        this.geo = new THREE.Geometry().fromBufferGeometry(geometry);
+
         this.mesh = new THREE.Mesh( geometry, material );
         //this.mesh.doubleSided = true;
+        
     }
 
     this.Hide = function(scene) {
@@ -63,10 +68,15 @@ function Model(filename, name, color) {
     }
 
     this.refreshDisplay = function(scene) {
-        if (this.mesh != null)
+
+        if (this.mesh != null) {
             scene.remove(this.mesh);
-        if (this.wireframe != null)
+            //this.mesh.dispose();
+        }
+        if (this.wireframe != null) {
             scene.remove(this.wireframe);
+            //this.mesh.dispose();
+        }
         this.mesh = null;
         this.wireframe = null;
         var material;
@@ -399,9 +409,178 @@ function Model(filename, name, color) {
             this.convertToTriangles(this.currentMesh);
             this.calcNormals(this.currentMesh);
             this.setBC(this.currentMesh);
+            this.avgh = obj.avgh;
         }
 
         //lv.refreshBuffers(gl);
+    }
+    this.searchMinY = function () {
+        var min = 100500;
+        var index = -1;
+        for (var i = 0; i < this.currentMesh.points.length; i += 3){
+            if (this.currentMesh.points[i + 1] < min){
+                min = this.currentMesh.points[i + 1];
+                index = i;
+            }
+        }
+        return index;
+    }
+    this.setAvgh = function () {
+        var positions = this.currentMesh.points;
+
+        // original points, indexed by their indices.
+        // For every point, we store adjacent faces and adjacent edges.
+        originalPoints = [];
+
+        // original faces, in their original order.
+        // For every face, we store the edges, the points, and the face point.
+        faces = [];
+
+        // original edges. Indexed by the sorted indices of their vertices
+        // So the edge whose edge vertices has index `6` and `2`, will be
+        // indexed by the array [2,6]
+        edges = [];
+        avghole = [];
+
+        /*
+         First we collect all the information that we need to run the algorithm.
+         Each point must know its adjacent edges and faces.
+         Each face must know its edges and points.
+         Each edge must know its adjacent faces and points.
+
+         We collect all this information in this loop.
+         */
+        var cells = this.currentMesh.cells;
+        for (var iCell = 0; iCell < cells.length; ++iCell) {
+
+            var cellPositions = cells[iCell];
+            var facePoints = [];
+
+            // initialize:
+            faces[iCell] = {};
+
+
+            // go through all the points of the face.
+            for (var j = 0; j < cellPositions.length; ++j) {
+
+                var positionIndex = cellPositions[j];
+
+                var pointObject;
+
+                /*
+                 On the fly, Create an object for every point.
+                 */
+                if (typeof originalPoints[positionIndex] === 'undefined') {
+                    // create the object on the fly.
+
+                    var vec = [];
+                    vec.push(positions[positionIndex * 3]);
+                    vec.push(positions[positionIndex * 3 + 1]);
+                    vec.push(positions[positionIndex * 3 + 2]);
+                    pointObject = {
+                        point: vec,
+                        faces: [],
+                        edges: new Set()
+
+                    };
+
+                    originalPoints[positionIndex] = pointObject;
+                } else {
+                    pointObject = originalPoints[positionIndex];
+                }
+
+                // every point should have a reference to its face.
+                pointObject.faces.push(faces[iCell]);
+
+                facePoints.push(pointObject);
+            }
+
+            // every face should know its points.
+            faces[iCell].points = facePoints;
+
+            var avg = [0, 0, 0];
+
+
+
+            var faceEdges = [];
+
+            // go through all the edges of the face.
+            for (var iEdge = 0; iEdge < cellPositions.length; ++iEdge) {
+
+                var edge;
+
+                if (cellPositions.length == 3) { // for triangles
+                    if (iEdge == 0) {
+                        edge = [cellPositions[0], cellPositions[1]];
+                    } else if (iEdge == 1) {
+                        edge = [cellPositions[1], cellPositions[2]];
+                    } else if (iEdge == 2) {
+                        edge = [cellPositions[2], cellPositions[0]];
+                    }
+                } else { // for quads.
+                    if (iEdge == 0) {
+                        edge = [cellPositions[0], cellPositions[1]];
+                    } else if (iEdge == 1) {
+                        edge = [cellPositions[1], cellPositions[2]];
+                    } else if (iEdge == 2) {
+                        edge = [cellPositions[2], cellPositions[3]];
+                    } else if (iEdge == 3) {
+                        edge = [cellPositions[3], cellPositions[0]];
+                    }
+                }
+
+                // every edge is represented by the sorted indices of its vertices.
+                // (the sorting ensures that [1,2] and [2,1] are considered the same edge, which they are )
+                edge = _sort(edge);
+
+                var edgeObject;
+                // on the fly, create an edge object.
+                if (typeof edges[edge] === 'undefined') {
+
+                    edgeObject = {
+                        points: [originalPoints[edge[0]], originalPoints[edge[1]]],
+                        faces: []
+
+                    };
+
+                    edges[edge] = edgeObject;
+                } else {
+                    edgeObject = edges[edge];
+                }
+
+                // every edge should know its adjacent faces.
+                edgeObject.faces.push(faces[iCell]);
+
+                // every point should know its adjacent edges.
+                edgeObject.points[0].edges.add(edgeObject);
+                edgeObject.points[1].edges.add(edgeObject);
+
+
+
+                faceEdges.push(edgeObject);
+            }
+
+            // every face should know its edges.
+            faces[iCell].edges = faceEdges;
+        }
+        avghole = [0, 0, 0];
+        var hc = 0.0;
+
+        for (var i = 0; i < positions.length / 3; ++i) {
+
+            var point = originalPoints[i];
+            var n = point.faces.length;
+
+
+            if (n != point.edges.size) {
+
+                addvec(avghole, point.point);
+                hc++;
+            }
+        }
+
+        multvec(avghole, 1.0 / hc);
+        this.avgh = avghole;
     }
 }
 
@@ -416,3 +595,5 @@ var tricuspid = new Model("tricuspid_valve.txt", "Tricuspid_Valve", "#ffe6e6");
 var mitral = new Model("valve2.txt", "Mitral_Valve", "#ffe6e6");
 var heart_arteries = new Model("heart_arteries.txt", "Heart_Arteries", "#c70000");
 var heart_veins= new Model("heart_veins.txt", "Heart_Veins", "#335e92");
+
+

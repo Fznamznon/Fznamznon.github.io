@@ -8,6 +8,8 @@
 		<script src="catmull-clark.js"></script>
 		<script src="TrackballControls.js"></script>
 		<script src="dat.gui.js"></script>
+		<script src="d3.js"></script>
+		<script src="mode.js"></script>
 		<style>
 			body { margin: 0; }
 			canvas { width: 80%; height: 100%; }
@@ -22,7 +24,12 @@
 			var control;
 			var selected;
 			var intersect;
-
+			var planeVisible = false;
+			var planeMesh;
+			var allHide;
+			var contoursVisible = false;
+			var dot, dot1, dot2;
+			var dotVisible = false;
 			init();
 
 			function refreshScene() {
@@ -40,6 +47,52 @@
 							return Models[i];
 				}
 				return null;
+			}
+
+			function hideAll()
+			{
+				for (var i = 0; i < Models.length; ++i)
+				{
+					Models[i].visible = false;
+				}
+				refreshScene();
+			}
+
+			function showAll() {
+				for (var i = 0; i < Models.length; ++i)
+				{
+					Models[i].visible = true;
+				}
+				refreshScene();
+			}
+
+			function addContours() {
+				for(var i = 0; i < Models.length; ++i)
+				{
+					if (contoursVisible)
+					{
+						scene.remove(Models[i].contour);
+					}
+					else
+					{
+						scene.add(Models[i].contour);
+
+					}
+
+				}
+				contoursVisible = (!contoursVisible);
+			}
+
+			function addPlane() {
+				if (planeVisible) {
+					scene.remove(planeMesh);
+					planeVisible = false;
+				}
+				else
+				{
+					scene.add(planeMesh);
+					planeVisible = true;
+				}
 			}
 
 			function onMouseMove( event ) {
@@ -86,6 +139,7 @@
 					return String.fromCharCode(event.which); // остальные
 				}
 
+
 				return null; // спец. символ
 			}
 			
@@ -97,6 +151,44 @@
 						else
 							selected.visible = true;
 						refreshScene();
+					}
+				}
+				if (getChar(event) == 'p')
+				{
+					addPlane();
+				}
+				if (getChar(event) == 'c')
+				{
+					addContours();
+				}
+				if (getChar(event) == ' ')
+				{
+					if (allHide)
+					{
+						showAll();
+						allHide = false;
+					}
+					else
+					{
+						hideAll();
+						allHide = true;
+					}
+				}
+				if (getChar(event) == 'd')
+				{
+					if (dotVisible)
+					{
+						scene.remove(dot);
+						scene.remove(dot1);
+						scene.remove(dot2);
+						dotVisible = false;
+					}
+					else
+					{
+						scene.add(dot);
+						scene.add(dot1);
+						scene.add(dot2);
+						dotVisible = true;
 					}
 				}
 			}
@@ -122,12 +214,39 @@
 
 				for (var i = 0; i < Models.length; ++i) {
 					Models[i].initialize();
+
+				}
+
+				refreshScene();
+				var ind = lv.searchMinY();
+				tricuspid.setAvgh();
+				mitral.setAvgh();
+				var p1 = new THREE.Vector3(lv.currentMesh.points[ind], lv.currentMesh.points[ind + 1], lv.currentMesh.points[ind + 2]);
+				var p2 = new THREE.Vector3(tricuspid.avgh[0], tricuspid.avgh[1], tricuspid.avgh[2]);
+				var p3 = new THREE.Vector3(mitral.avgh[0], mitral.avgh[1], mitral.avgh[2]);
+				var p4 = new THREE.Vector3().subVectors(p3, p2);
+				var p5 = new THREE.Vector3().subVectors(p3, p1);
+
+				var p6 = new THREE.Vector3().crossVectors(p5, p4);
+				p6.normalize();
+				var plane = new THREE.Plane(p6, 0.0);
+				plane.normal.normalize();
+				//console.log(p6.angleTo(p4));
+				//plane;
+
+				for (var i = 0; i < Models.length; ++i) {
+
+					var p = new MODE.planeIntersect(Models[i].geo, plane);
+					var m = new THREE.LineBasicMaterial();
+					m.side = THREE.DoubleSide;
+					Models[i].contour = p.wireframe(m);
+					//scene.add(this.contour);
+
 				}
 
 
-				refreshScene();
+				renderer = new THREE.WebGLRenderer();
 
-			    renderer = new THREE.WebGLRenderer();
 
 				camera.position.z = 2;
 				camera.position.y = 0.7	;
@@ -152,6 +271,65 @@
 
 				control.addEventListener( 'change', render );
 
+				/*
+				la.visible = false;
+				lv.visible = false;
+				rv.visible = false;
+				ra.visible = false;
+				pulmonary.visible = false;
+				heart_arteries.visible = false;
+				heart_veins.visible = false;
+				aortha.visible = false;
+				heart.visible = false;
+
+				refreshScene();
+				*/
+				var dotGeometry1 = new THREE.Geometry();
+				dotGeometry1.vertices.push(p1);
+				var dotMaterial1 = new THREE.PointsMaterial( { size: 10, sizeAttenuation: false } );
+				dot1 = new THREE.Points( dotGeometry1, dotMaterial1 );
+				//scene.add( dot1 );
+
+				var dotGeometry = new THREE.Geometry();
+				dotGeometry.vertices.push(p2);
+				var dotMaterial = new THREE.PointsMaterial( { size: 10, sizeAttenuation: false } );
+				dot = new THREE.Points( dotGeometry, dotMaterial );
+				//scene.add( dot );
+
+				var dotGeometry2 = new THREE.Geometry();
+				dotGeometry2.vertices.push(p3);
+				var dotMaterial2 = new THREE.PointsMaterial( { size: 10, sizeAttenuation: false } );
+				dot2 = new THREE.Points( dotGeometry2, dotMaterial2 );
+				//scene.add( dot2 );
+
+
+				var planegeometry = new THREE.PlaneBufferGeometry(2, 2);
+
+				// Assumes that "plane" is the source THREE.Plane object.
+				// Normalize the plane
+				var normPlane = new THREE.Plane().copy(plane);
+				// Rotate from (0,0,1) to the plane's normal
+				var quaternion = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),normPlane.normal);
+				// Calculate the translation
+				var position = new THREE.Vector3(
+						-normPlane.constant*normPlane.normal.x,
+						-normPlane.constant*normPlane.normal.y,
+						-normPlane.constant*normPlane.normal.z);
+
+				var matrix = new THREE.Matrix4().compose(position,quaternion,new THREE.Vector3(1,1,1));
+
+				planegeometry.applyMatrix(matrix);
+
+				var mat = new THREE.MeshBasicMaterial();
+				mat.color = new THREE.Color("#C0C0C0");
+				mat.side = THREE.DoubleSide;
+				mat.opacity = 0.3;
+				mat.transparent = true;
+				planeMesh = new THREE.Mesh(planegeometry, mat);
+
+				planeMesh.translateOnAxis(p5.normalize(), 0.4);
+				planeMesh.translateOnAxis(p4.normalize(), -0.2);
+
 
 			}
 
@@ -167,6 +345,7 @@
 						Models[i].updateSubdiv(1);
 					}
 					refreshScene();
+
 				}
 				this.Subdivision_2 = function () {
 					for (var i = 0; i < Models.length; ++i) {
@@ -333,10 +512,12 @@
 					if (intersects.length > 0) {
 						var temp = intersect;
 						intersect = whatIsIt(intersects[0].object);
-						if (intersect != temp) {
-							intersect.mesh.material.color.addScalar(40.0 / 255.0);
-							if (temp != null)
-								temp.mesh.material.color = new THREE.Color(temp.current_color);
+						if (intersect != null) {
+							if (intersect != temp) {
+								intersect.mesh.material.color.addScalar(40.0 / 255.0);
+								if (temp != null)
+									temp.mesh.material.color = new THREE.Color(temp.current_color);
+							}
 						}
 					}
 					else {
