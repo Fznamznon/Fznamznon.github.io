@@ -34,6 +34,8 @@ function multvec(a, num)
 /*
  Implement Catmull-Clark subvision, as it is described on Wikipedia
  */
+
+
 function _catmullClark(positions, cells) {
 
     // original points, indexed by their indices.
@@ -48,7 +50,7 @@ function _catmullClark(positions, cells) {
     // So the edge whose edge vertices has index `6` and `2`, will be
     // indexed by the array [2,6]
     edges = [];
-
+    avghole = [];
 
     /*
      First we collect all the information that we need to run the algorithm.
@@ -226,6 +228,7 @@ function _catmullClark(positions, cells) {
         multvec(avg2, 1.0 / count);
 
         edge.midPoint = avg2;
+
     }
 
 
@@ -233,8 +236,10 @@ function _catmullClark(positions, cells) {
      Each original point is moved to the position
      (F + 2R + (n-3)P) / n. See the wikipedia article for more details.
      */
-    for (var i = 0; i < positions.length / 3; ++i) {
+    avghole = [0, 0, 0];
+    var hc = 0.0;
 
+    for (var i = 0; i < positions.length / 3; ++i) {
 
         var point = originalPoints[i];
         var n = point.faces.length;
@@ -246,10 +251,13 @@ function _catmullClark(positions, cells) {
             for (var edge of point.edges) {
                 if (edge.faces.length == 1) {
                     addvec(newPoint, edge.midPoint);
+                    edge.edgePoint = edge.midPoint;
                     cnt++;
                 }
             }
             multvec(newPoint, 1.0 / cnt);
+            addvec(avghole, newPoint);
+            hc++;
         }
         else {
 
@@ -269,10 +277,10 @@ function _catmullClark(positions, cells) {
             //vec3.scale(newPoint, newPoint, 1.0 / n);
             multvec(newPoint, 1.0 / n);
         }
-        point.newPoint = newPoint
+        point.newPoint = newPoint;
 
     }
-
+    multvec(avghole, 1.0 / hc);
 
     newCells = [];
     newPoints = [];
@@ -323,7 +331,7 @@ function _catmullClark(positions, cells) {
     }
 
 
-    return { points: newPoints, cells: newCells};
+    return { points: newPoints, cells: newCells, avgh: avghole};
 
 }
 

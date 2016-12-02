@@ -40,23 +40,46 @@ function Model(filename, name, color) {
     this.geo = null;
     this.contour = null;
 
+    this.getColorArray = function(color) {
+        var colors = new Uint8Array(this.currentMesh.points.length);
+        for (var i = 0; i < colors.length; i += 3) {
+            colors[i] = color.r * 255;
+            colors[i + 1] = color.g * 255;
+            colors[i + 2] = color.b * 255;
+        }
+        return colors;
+    }
+    
+    this.setColor = function(color) {
+        var colors = this.getColorArray(color);
+        this.mesh.geometry.attributes.color.array = colors;
+        this.mesh.geometry.attributes.color.needsUpdate = true;
+    }
+
+
     this.refreshMesh = function (scene, material) {
 
         var geometry = new THREE.BufferGeometry();
 
         var vertices = new Float32Array(this.currentMesh.points);
         var indices = new Uint32Array( this.currentMesh.triangles);
-        var normals = new Float32Array(this.currentMesh.normals);
-
+        //var normals = new Float32Array(this.currentMesh.normals);
+        var temp_color = new THREE.Color(this.current_color);
+        //console.log(temp_color);
+        var colors = this.getColorArray(temp_color);
         geometry.setIndex( new THREE.BufferAttribute( indices, 1 ) );
 
         geometry.addAttribute( 'position', new THREE.BufferAttribute(vertices , 3 ) );
-        geometry.addAttribute( 'normal', new THREE.BufferAttribute(normals , 3 ) );
+        //geometry.addAttribute( 'normal', new THREE.BufferAttribute(normals , 3 ) );
+        geometry.addAttribute( 'color', new THREE.BufferAttribute(colors , 3, true ) );
+        geometry.computeVertexNormals();
 
+        geometry.attributes.color.needsUpdate = true;
         this.geo = new THREE.Geometry().fromBufferGeometry(geometry);
 
         this.mesh = new THREE.Mesh( geometry, material );
         //this.mesh.doubleSided = true;
+        
         
     }
 
@@ -83,24 +106,33 @@ function Model(filename, name, color) {
 
         switch (this.wireframeMode){
             case 0:
-                material = new THREE.MeshLambertMaterial();
-                material.color = new THREE.Color(this.current_color);
-                //material.color = new THREE.Color(this.default_color.r, this.default_color.g, this.default_color.b);
+                material = new THREE.MeshPhongMaterial({
+                    vertexColors: THREE.VertexColors,
+                       specular: 0x666666, shininess: 40 });
                 material.side = THREE.DoubleSide;
+
+                //material.color = new THREE.Color(this.current_color);
+                //material.color = new THREE.Color(this.default_color.r, this.default_color.g, this.default_color.b);
+
+
                 this.refreshMesh(scene, material);
                 break;
             case 1:
-                material = new THREE.MeshLambertMaterial();
-                //material.color = new THREE.Color(this.default_color.r, this.default_color.g, this.default_color.b);
-                material.color = new THREE.Color(this.current_color);
+
+                material = new THREE.MeshPhongMaterial({
+                    vertexColors: THREE.VertexColors,
+                    specular: 0x666666, shininess: 40 });
                 material.side = THREE.DoubleSide;
+
                 this.refreshMesh(scene, material);
                 this.wireframe = new THREE.WireframeHelper( this.mesh, 0x0000ff);
                 scene.add(this.wireframe);
                 break;
 
             case 2:
-                material = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true } );
+                material = new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors,
+                    wireframe: true } );
+
                 material.side = THREE.DoubleSide;
                 this.refreshMesh(scene, material);
                 break;
