@@ -845,7 +845,7 @@ var heart_arteries = new Model("heart_arteries.txt", "Heart_Arteries", "#c70000"
 var heart_veins= new Model("heart_veins.txt", "Heart_Veins", "#335e92");
 
 */
-lv_bottom = new Model("Left_Ventricle.txt", "lv", "#c70000");
+lv_bottom = new Model("Left_ventricle.txt", "lv", "#c70000");
 
 
 
@@ -876,7 +876,7 @@ lv_bottom.addPlane(
 
 
 //ventricles_geo = new Model("ventricles.txt", "vs", "#bf4040");
-rv_bottom = new Model("Right_Ventricle.txt", "rv", "#335e92");
+rv_bottom = new Model("Right_ventricle.txt", "rv", "#335e92");
 
 rv_bottom.addBasis([-0.35015079379081726, -0.1768198013305664, 0.11724582314491272],
     [-0.11318855732679367, 0.3041553497314453, 0.22425678372383118],
