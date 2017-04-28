@@ -44,6 +44,21 @@
 
 			init();
 
+			function getAvg(points) {
+				var arr = [0.0, 0.0, 0.0];
+				for (var i = 0; i < points.length; ++i) {
+					arr[0] += points[i][0];
+					arr[1] += points[i][1];
+					arr[2] += points[i][2];
+				}
+				arr[0] /= points.length;
+				arr[1] /= points.length;
+				arr[2] /= points.length;
+
+				return arr;
+			}
+
+
 			function addDot(pos)
 			{
 				var dotGeometry = new THREE.Geometry();
@@ -52,6 +67,61 @@
 				var dot = new THREE.Points( dotGeometry, dotMaterial1 );
 				scene.add( dot );
 				console.log(pos);
+			}
+
+			function addPlaneModel(plane)
+			{
+				//var p1 = new THREE.Vector3(v1[0], v1[1], v1[2]);
+				//var p2 = new THREE.Vector3(v2[0], v2[1], v2[2]);
+				//var p3 = new THREE.Vector3(v3[0], v3[1], v3[2]);
+
+
+
+
+				//var p4 = new THREE.Vector3().subVectors(p3, p2);
+				//var p5 = new THREE.Vector3().subVectors(p3, p1);
+
+
+				//addDot(p1);
+				//addDot(p2);
+				//addDot(p3);
+
+				var norm = new THREE.Vector3(plane[0], plane[1], plane[2]);
+
+				//var p6 = new THREE.Vector3().crossVectors(p5, p4);
+				//p6.normalize();
+				var plane = new THREE.Plane(norm, plane[3]);
+				//plane.normal.normalize();
+
+				var planegeometry = new THREE.PlaneBufferGeometry(2, 2);
+
+				// Assumes that "plane" is the source THREE.Plane object.
+				// Normalize the plane
+				var normPlane = new THREE.Plane().copy(plane);
+				normPlane.normal.normalize();
+				// Rotate from (0,0,1) to the plane's normal
+				var quaternion = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),normPlane.normal);
+				// Calculate the translation
+				var position = new THREE.Vector3(
+						-normPlane.constant*normPlane.normal.x,
+						-normPlane.constant*normPlane.normal.y,
+						-normPlane.constant*normPlane.normal.z);
+
+				var matrix = new THREE.Matrix4().compose(position,quaternion,new THREE.Vector3(1,1,1));
+
+				planegeometry.applyMatrix(matrix);
+
+				var mat = new THREE.MeshBasicMaterial();
+				mat.color = new THREE.Color("#C0C0C0");
+				mat.side = THREE.DoubleSide;
+				mat.opacity = 0.3;
+				mat.transparent = true;
+				planeMesh = new THREE.Mesh(planegeometry, mat);
+
+				scene.add(planeMesh);
+
+
+
 			}
 
 			function showBasis(basis)
@@ -281,6 +351,7 @@
 
 
 
+				addPlanes();
 
 				for (var i = 0; i < Models.length; ++i) {
 					Models[i].initialize();
@@ -288,27 +359,62 @@
 				}
 				refreshScene();
 
-				lv_bottom.initEndBasis(lvAVG, 0.05, 0.05, 0.05, 0.1, 0);
-				lv_bottom.initEndBasis(lvAVG, 0.05, 0.05, 0.05, 0, 1);
+				//hideAll();
+				//tricuspid.visible = true;
+				refreshScene();
+				//mitral.setAvgh();
+				var a = getAvg([mitral.basis[1][0],mitral.basis[1][1], mitral.basis[1][2]]);
+				//addDot(new THREE.Vector3(a[0], a[1], a[2]));
+				//mitral.initEndBasis(lvAVG, 0.05, 0.05, 0.05, 0, 0);
+				mitral.initEndBasis(a, 0.03, 0.03, 0.03, 0, 0);
+				mitral.initEndBasis(a, 0, 0, 0, 0, 1);
+
+				var b = getAvg([tricuspid.basis[1][0],tricuspid.basis[1][1], tricuspid.basis[1][2]]);
+
+				tricuspid.initEndBasis(b, 0.03, 0.03, 0.03, 0, 0);
+				tricuspid.initEndBasis(b, 0, 0, 0, 0, 1);
+
+				//addPlaneModel(tricuspid.planes[0]);
 
 
+				//showBasis(mitral.endBasis[0]);
+				//showBasis(mitral.basis[1]);
+				//showBasis(mitral.endBasis[1]);
+				//addPlaneModel(mitral.planes[0]);
 
+				lv.initEndBasis(lvAVG, 0.05, 0.05, 0.05, 0.1, 0);
+				lv.initEndBasis(lvAVG, 0.03, 0.03, 0.03, 0, 1);
+				lv.initEndBasis(lvAVG, 0, 0, 0, 0, 2);
 
-				rv_bottom.initEndBasis(rvAVG, 0.05, 0.05, 0.05, 0.1, 0);
-				rv_bottom.initEndBasis(rvAVG, 0.05, 0.05, 0.05, 0, 1);
+				//showBasis(rv.basis[2]);
+				//addPlaneModel(rv.planes[1]);
+
+				rv.initEndBasis(rvAVG, 0.05, 0.05, 0.05, 0.1, 0);
+				rv.initEndBasis(rvAVG, 0.05, 0.05, 0.05, 0, 1);
+				rv.initEndBasis(rvAVG, 0, 0, 0, 0, 2);
 
 				heart.initEndBasis(avg, 0.03, 0.03, 0.03, 0.05, 0);
 				heart.initEndBasis(avg, 0.03, 0.03, 0.03, 0, 1);
 				heart.initEndBasis(avg, 0, 0, 0, 0, 2);
+
+/*
+				heart_arteries.initEndBasis(avg, 0.03, 0.03, 0.03, 0.05, 0);
+				heart_arteries.initEndBasis(avg, 0.03, 0.03, 0.03, 0, 1);
+				heart_arteries.initEndBasis(avg, 0, 0, 0, 0, 2);
+
+				heart_veins.initEndBasis(avg, 0.03, 0.03, 0.03, 0.05, 0);
+				heart_veins.initEndBasis(avg, 0.03, 0.03, 0.03, 0, 1);
+				heart_veins.initEndBasis(avg, 0, 0, 0, 0, 2);
+				*/
 				//showBasis(heart.basis[0]);
 				//showBasis(heart.basis[1]);
 				//showBasis(heart.basis[2]);
 
-				addDot(new THREE.Vector3(avg[0], avg[1], avg[2]));
+				//addDot(new THREE.Vector3(avg[0], avg[1], avg[2]));
 
-				//showBasis(rv_bottom.basis[0]);
-				//showBasis(rv_bottom.basis[1]);
-				//showBasis(rv_bottom.endBasis);
+				//showBasis(rv.basis[0]);
+				//showBasis(rv.basis[1]);
+				//showBasis(rv.endBasis);
 				/*var ind = lv.searchMinY();
 				tricuspid.setAvgh();
 				mitral.setAvgh();
