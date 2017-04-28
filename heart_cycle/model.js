@@ -774,7 +774,7 @@ function Model(filename, name, color) {
 
         plane = [A, B, C, D];
         this.planes.push(plane);
-
+/*
         var dir = new THREE.Vector3().copy(norm);
 
         dir.normalize();
@@ -784,7 +784,7 @@ function Model(filename, name, color) {
         var hex = 0xffff00;
 
         var arrowHelper = new THREE.ArrowHelper( dir, origin, length, hex );
-        scene.add( arrowHelper );
+        scene.add( arrowHelper );*/
     }
 
     this.whereDot = function (x, y, z, plane) {
@@ -1053,12 +1053,12 @@ var la = new Model("Left_atrium2.txt", "Left_Atrium", "#c70000");
 var ra = new Model("Right_atrium2.txt", "Right_Atrium", "#335e92");
 
 
-lv = new Model("Left_Ventricle.txt", "lv", "#c70000");
+lv = new Model("Left_ventricle.txt", "lv", "#c70000");
 
 
 
 
-rv = new Model("Right_Ventricle.txt", "rv", "#335e92");
+rv = new Model("Right_ventricle.txt", "rv", "#335e92");
 
 
 
