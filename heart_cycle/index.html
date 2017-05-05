@@ -4,13 +4,15 @@
     <meta charset=utf-8>
     <title>Heart model</title>
     <script src="three.js"></script>
-    <script src="model.js"></script>
+    <script src="loader.js"></script>
     <script src="catmull-clark.js"></script>
     <script src="TrackballControls.js"></script>
     <script src="dat.gui.js"></script>
     <script src="d3.js"></script>
     <script src="mode.js"></script>
     <script src="parseArguments.js"></script>
+    <script src="model.js"></script>
+
     <style>
         body {
             margin: 0;
@@ -41,29 +43,11 @@
     var target;
     var TIME = 1;
     var heartBeat = false;
-    var lvAVG = [-0.06723282854999998, 0.06897249222500001, 0.055131804300000004];
-    var rvAVG = [-0.25731264130434783, 0.04981530221304347, 0.20386723265217388];
-    var avg = new Array(3);
-    avg[0] = (lvAVG[0] + rvAVG[0]) / 2;
-    avg[1] = (lvAVG[1] + rvAVG[1]) / 2;
-    avg[2] = (lvAVG[2] + rvAVG[2]) / 2;
+
 
 
     init();
 
-    function getAvg(points) {
-        var arr = [0.0, 0.0, 0.0];
-        for (var i = 0; i < points.length; ++i) {
-            arr[0] += points[i][0];
-            arr[1] += points[i][1];
-            arr[2] += points[i][2];
-        }
-        arr[0] /= points.length;
-        arr[1] /= points.length;
-        arr[2] /= points.length;
-
-        return arr;
-    }
 
     function initPlane() {
         var ind = lv.searchMinY();
@@ -202,7 +186,7 @@
             if (Models[i].visible)
                 Models[i].refreshDisplay(scene);
             else
-                Models[i].Hide(scene);
+                Models[i].hide(scene);
         }
     }
 
@@ -397,10 +381,9 @@
         scene.add(ambientLight);
 
 
-        initMoving();
 
         for (var i = 0; i < Models.length; ++i) {
-            Models[i].initialize();
+            Models[i].addToScene(scene);
 
         }
 
@@ -416,12 +399,12 @@
         //refreshScene();
 
         //addPlaneModel(heart.planes[1]);
-        //addPlaneModel(mitral.planes[1]);
+        //addPlaneModel(heart.planes[0]);
         //showBasis(mitral.endBasis[0], "#0000ff");
         //showBasis(mitral.endBasis[1], "#0000ff");
         //showBasis(mitral.endBasis[2], "#0000ff");
-        //showBasis(mitral.basis[0], "#0000ff");
-        //showBasis(mitral.basis[1], "#ff0000");
+        //showBasis(heart.basis[0], "#0000ff");
+        //showBasis(heart.basis[1], "#ff0000");
         //showBasis(heart.basis[2], "#ffff00");
 
 

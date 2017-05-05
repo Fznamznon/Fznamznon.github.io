@@ -2,6 +2,27 @@
  * Created by Мария on 09.08.2016.
  */
 
+function getAvg(points) {
+    var arr = [0.0, 0.0, 0.0];
+    for (var i = 0; i < points.length; ++i) {
+        arr[0] += points[i][0];
+        arr[1] += points[i][1];
+        arr[2] += points[i][2];
+    }
+    arr[0] /= points.length;
+    arr[1] /= points.length;
+    arr[2] /= points.length;
+
+    return arr;
+}
+
+
+var lvAVG = [-0.06723282854999998, 0.06897249222500001, 0.055131804300000004];
+var rvAVG = [-0.25731264130434783, 0.04981530221304347, 0.20386723265217388];
+var avg = getAvg([lvAVG, rvAVG]);
+
+
+
 function offsetPoint(p1, p2, r) {
     Rab = Math.sqrt((p1[0] - p2[0]) * (p1[0] - p2[0])
         + (p1[1] - p2[1]) * (p1[1] - p2[1]) +
@@ -21,29 +42,38 @@ function offsetPoint(p1, p2, r) {
 }
 
 var Models = [];
-function Model(filename, name, color) {
+function Model(arrays, name, color) {
     this.controlMesh =
     {
         points: [],
         cells: [],
         triangles: [],
-        normals: [],
         BC: []
 
     }
+
+    this.controlMesh.points = arrays.points;
+    this.controlMesh.cells = arrays.cells;
+
+
     this.currentMesh =
     {
         points: [],
         cells: [],
         triangles: [],
-        normals: [],
         BC: []
 
     }
+
+    this.currentMesh.points = arrays.points.slice();
+    this.currentMesh.cells = arrays.cells.slice();
+
+
+
+    this.scene = null;
     this.movable = false;
     this.startBasis = [];
     this.endBasis = [];
-    this.filename = filename;
     this.basis = [];
     this.wireframeMode = 0;
     this.visible = true;
@@ -63,6 +93,9 @@ function Model(filename, name, color) {
     this.geo = null;
     this.contour = null;
 
+    this.addToScene = function (scene) {
+        this.scene = scene;
+    }
     this.addBasis = function (b1, b2, b3, b4) {
         this.movable = true;
         var vec = [];
@@ -80,7 +113,6 @@ function Model(filename, name, color) {
         this.basis.push(vec2);
 
     }
-
 
     this.initEndBasis = function (point, r1, r2, r3, r4, i) {
 
@@ -110,21 +142,17 @@ function Model(filename, name, color) {
         this.mesh.geometry.attributes.color.needsUpdate = true;
     }
 
-
     this.refreshMesh = function (scene, material) {
 
         var geometry = new THREE.BufferGeometry();
 
         var vertices = new Float32Array(this.currentMesh.points);
         var indices = new Uint32Array(this.currentMesh.triangles);
-        //var normals = new Float32Array(this.currentMesh.normals);
         var temp_color = new THREE.Color(this.current_color);
-        //console.log(temp_color);
         var colors = this.getColorArray(temp_color);
         geometry.setIndex(new THREE.BufferAttribute(indices, 1));
 
         geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
-        //geometry.addAttribute( 'normal', new THREE.BufferAttribute(normals , 3 ) );
         geometry.addAttribute('color', new THREE.BufferAttribute(colors, 3, true));
         geometry.computeVertexNormals();
 
@@ -137,14 +165,14 @@ function Model(filename, name, color) {
 
     }
 
-    this.Hide = function (scene) {
+    this.hide = function () {
         if (this.mesh != null)
             scene.remove(this.mesh);
         if (this.wireframe != null)
             scene.remove(this.wireframe);
     }
 
-    this.refreshDisplay = function (scene) {
+    this.refreshDisplay = function () {
 
         if (this.mesh != null) {
             scene.remove(this.mesh);
@@ -165,9 +193,6 @@ function Model(filename, name, color) {
                     specular: 0x666666, shininess: 20
                 });
                 material.side = THREE.DoubleSide;
-
-                //material.color = new THREE.Color(this.current_color);
-                //material.color = new THREE.Color(this.default_color.r, this.default_color.g, this.default_color.b);
 
 
                 this.refreshMesh(scene, material);
@@ -223,7 +248,6 @@ function Model(filename, name, color) {
             }
         }
     }
-
 
     this.getBc = function (x, y, z, bs) {
         var coords = [];
@@ -330,7 +354,7 @@ function Model(filename, name, color) {
                 var y = Mesh.points[ind * 3 + 1];
                 var z = Mesh.points[ind * 3 + 2];
 
-                var coords = this.getBc(x, y, z, this.basis[i]);
+                var coords = this.getBc(x, y, z, this.startBasis[i]);
 
 
                 Mesh.BC[ind * 4] = coords[0];
@@ -343,82 +367,6 @@ function Model(filename, name, color) {
 
     }
 
-
-    this.parseFile = function (data) {
-        var lines = data.split("\n");
-        var counts = lines[0].split(" ");
-
-        var v = parseInt(counts[0]);
-        var ed = parseInt(counts[1]);
-        var f = parseInt(counts[2]);
-
-        var edges = [];
-
-        for (i = 1; i <= v; ++i) {
-            var val = lines[i].split(/\s+/);
-
-            for (j = 0; j < val.length - 1; ++j) {
-                this.controlMesh.points.push(parseFloat(val[j]));
-                this.currentMesh.points.push(parseFloat(val[j]));
-                j++;
-                this.controlMesh.points.push(parseFloat(val[j]));
-                this.currentMesh.points.push(parseFloat(val[j]));
-                j++;
-                this.controlMesh.points.push(parseFloat(val[j]));
-                this.currentMesh.points.push(parseFloat(val[j]));
-            }
-        }
-        for (i = v + 1; i <= v + ed; ++i) {
-            var val = lines[i].split(/\s+/);
-            for (j = 0; j < val.length - 1; ++j) {
-                edges.push(parseInt(val[j]));
-                j++;
-                edges.push(parseInt(val[j]));
-                j++;
-            }
-        }
-        for (i = v + ed + 1; i <= v + ed + f; ++i) {
-            var val = lines[i].split(/\s+/);
-            if (val[0] != 'f') continue;
-            var figure_type = parseInt(val[1]);
-            var a = [];
-            var e, ind;
-
-            for (var j = 2; j < 2 + figure_type; ++j) {
-                e = parseInt(val[j]);
-                ind = (e >= 0) ? e * 2 : (-1 * e - 1) * 2 + 1;
-                a.push(edges[ind]);
-            }
-            this.controlMesh.cells.push(a);
-            this.currentMesh.cells.push(a);
-        }
-        this.convertToTriangles(this.controlMesh);
-        this.convertToTriangles(this.currentMesh);
-
-        if (this.basis.length != 0) {
-            this.setBC(this.currentMesh);
-            this.setBC(this.controlMesh);
-        }
-        //this.setBuffers(gl);
-
-
-    }
-
-    this.initialize = function () {
-
-        var xmlhttp = new XMLHttpRequest();
-        xmlhttp.open("GET", this.filename, false);
-        var obj = this;
-        xmlhttp.onreadystatechange = function () {
-            if (xmlhttp.readyState == 4) {
-
-                //alert(xmlhttp.responseText);
-                obj.parseFile(xmlhttp.responseText);
-                console.log('received')
-            }
-        };
-        xmlhttp.send();
-    }
 
 
     this.changeBasis = function () {
@@ -448,12 +396,10 @@ function Model(filename, name, color) {
 
     this.returnToControlMesh = function () {
         this.currentMesh.points = [];
-        this.currentMesh.normals = [];
         this.currentMesh.triangles = [];
         this.currentMesh.BC = [];
         for (var i = 0; i < this.controlMesh.points.length; ++i) {
             this.currentMesh.points.push(this.controlMesh.points[i]);
-            this.currentMesh.normals.push(this.controlMesh.normals[i]);
         }
         for (var i = 0; i < this.controlMesh.triangles.length; ++i) {
             this.currentMesh.triangles.push(this.controlMesh.triangles[i]);
@@ -474,7 +420,15 @@ function Model(filename, name, color) {
             this.currentMesh.cells = obj.cells;
             this.convertToTriangles(this.currentMesh);
             if (this.movable) {
+                /*for (var i = 0; i < this.basis.length; ++i) {
+                    for (var j = 0; j < 4; ++j) {
+                        this.basis[i][j] = this.startBasis[i][j].slice();
+                    }
+                }*/
                 this.setBC(this.currentMesh);
+                this.changeBasis();
+                this.refreshPoints();
+
             }
             this.avgh = obj.avgh;
         }
@@ -653,7 +607,6 @@ function Model(filename, name, color) {
 
     }
 
-
     this.addPlane = function (t1, t2, t3) {
 
         var p1 = new THREE.Vector3(t1[0], t1[1], t1[2]);
@@ -701,6 +654,9 @@ function Model(filename, name, color) {
 
     }
 
+
+    this.convertToTriangles(this.controlMesh);
+    this.convertToTriangles(this.currentMesh);
 }
 
 
@@ -956,28 +912,46 @@ function addAllEndBasis() {
 function initMoving() {
     addPlanes();
     addAllEndBasis();
+    for (var i = 0; i < Models.length; ++i) {
+        if (Models[i].basis.length != 0) {
+            Models[i].setBC(Models[i].currentMesh);
+            Models[i].setBC(Models[i].controlMesh);
+        }
+    }
 }
 
+var arrays;
+arrays = loader.load("heart_arteries.txt");
+var heart_arteries = new Model(arrays, "Heart_Arteries", "#c70000");
 
-var heart_arteries = new Model("heart_arteries.txt", "Heart_Arteries", "#c70000");
-var heart_veins = new Model("heart_veins.txt", "Heart_Veins", "#335e92");
-var mitral = new Model("valve2.txt", "Mitral_Valve", "#ffe6e6");
-var aortha = new Model("Aortha.txt", "Aortha", "#c70000");
+arrays = loader.load("heart_veins.txt");
+var heart_veins = new Model(arrays, "Heart_Veins", "#335e92");
 
-var tricuspid = new Model("tricuspid_valve.txt", "Tricuspid_Valve", "#ffe6e6");
-var pulmonary = new Model("Pulmonary.txt", "Pulmonary_Artery", "#335e92");
+arrays = loader.load("valve2.txt");
+var mitral = new Model(arrays, "Mitral_Valve", "#ffe6e6");
 
-var la = new Model("Left_atrium2.txt", "Left_Atrium", "#c70000");
-var ra = new Model("Right_atrium2.txt", "Right_Atrium", "#335e92");
+arrays = loader.load("Aortha.txt");
+var aortha = new Model(arrays, "Aortha", "#c70000");
 
+arrays = loader.load("tricuspid_valve.txt");
+var tricuspid = new Model(arrays, "Tricuspid_Valve", "#ffe6e6");
 
-var lv = new Model("Left_ventricle.txt", "lv", "#c70000");
+arrays = loader.load("Pulmonary.txt");
+var pulmonary = new Model(arrays, "Pulmonary_Artery", "#335e92");
 
+arrays = loader.load("Left_atrium2.txt");
+var la = new Model(arrays, "Left_Atrium", "#c70000");
 
-var rv = new Model("Right_ventricle.txt", "rv", "#335e92");
+arrays = loader.load("Right_atrium2.txt");
+var ra = new Model(arrays, "Right_Atrium", "#335e92");
 
+arrays = loader.load("Left_ventricle.txt");
+var lv = new Model(arrays, "lv", "#c70000");
 
-var heart = new Model("heart.txt", "Heart", "#bf4040");
+arrays = loader.load("Right_ventricle.txt");
+var rv = new Model(arrays, "rv", "#335e92");
 
+arrays = loader.load("heart.txt");
+var heart = new Model(arrays, "Heart", "#bf4040");
 
-
+initMoving();
