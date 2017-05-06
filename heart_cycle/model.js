@@ -2,19 +2,6 @@
  * Created by Мария on 09.08.2016.
  */
 
-function getAvg(points) {
-    var arr = [0.0, 0.0, 0.0];
-    for (var i = 0; i < points.length; ++i) {
-        arr[0] += points[i][0];
-        arr[1] += points[i][1];
-        arr[2] += points[i][2];
-    }
-    arr[0] /= points.length;
-    arr[1] /= points.length;
-    arr[2] /= points.length;
-
-    return arr;
-}
 
 
 var lvAVG = [-0.06723282854999998, 0.06897249222500001, 0.055131804300000004];
@@ -23,23 +10,7 @@ var avg = getAvg([lvAVG, rvAVG]);
 
 
 
-function offsetPoint(p1, p2, r) {
-    Rab = Math.sqrt((p1[0] - p2[0]) * (p1[0] - p2[0])
-        + (p1[1] - p2[1]) * (p1[1] - p2[1]) +
-        (p1[2] - p2[2]) * (p1[2] - p2[2]));
-    k = r / Rab;
-    Xc = p1[0] + (p2[0] - p1[0]) * k;
-    Yc = p1[1] + (p2[1] - p1[1]) * k;
-    Zc = p1[2] + (p2[2] - p1[2]) * k;
 
-    var res = [];
-    res.push(Xc);
-    res.push(Yc);
-    res.push(Zc);
-
-    return res;
-
-}
 
 var Models = [];
 function Model(arrays, name, color) {
@@ -326,18 +297,18 @@ function Model(arrays, name, color) {
                     var y = Mesh.points[i + 1];
                     var z = Mesh.points[i + 2];
                     if (j == 0) {
-                        if (this.whereDot(x, y, z, this.planes[j]) < 0) {
+                        if (whereDot(x, y, z, this.planes[j]) < 0) {
                             this.indices[j].push(i / 3);
                         }
                     }
                     if (j != 0) {
-                        if (this.whereDot(x, y, z, this.planes[j - 1]) > 0 &&
-                            this.whereDot(x, y, z, this.planes[j]) < 0) {
+                        if (whereDot(x, y, z, this.planes[j - 1]) > 0 &&
+                            whereDot(x, y, z, this.planes[j]) < 0) {
                             this.indices[j].push(i / 3);
                         }
                     }
                     if (j == this.planes.length - 1) {
-                        if (this.whereDot(x, y, z, this.planes[j]) > 0)
+                        if (whereDot(x, y, z, this.planes[j]) > 0)
                             this.indices[j + 1].push(i / 3);
                     }
 
@@ -420,11 +391,7 @@ function Model(arrays, name, color) {
             this.currentMesh.cells = obj.cells;
             this.convertToTriangles(this.currentMesh);
             if (this.movable) {
-                /*for (var i = 0; i < this.basis.length; ++i) {
-                    for (var j = 0; j < 4; ++j) {
-                        this.basis[i][j] = this.startBasis[i][j].slice();
-                    }
-                }*/
+                
                 this.setBC(this.currentMesh);
                 this.changeBasis();
                 this.refreshPoints();
@@ -433,7 +400,6 @@ function Model(arrays, name, color) {
             this.avgh = obj.avgh;
         }
 
-        //lv.refreshBuffers(gl);
     }
     this.searchMinY = function () {
         var min = 100500;
@@ -638,10 +604,6 @@ function Model(arrays, name, color) {
          scene.add( arrowHelper );*/
     }
 
-    this.whereDot = function (x, y, z, plane) {
-
-        return x * plane[0] + y * plane[1] + z * plane[2] + plane[3];
-    }
 
     this.refreshPoints = function () {
         this.mesh.geometry.removeAttribute('position');
