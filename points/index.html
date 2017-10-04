@@ -118,7 +118,7 @@
         var dotMaterial1 = new THREE.PointsMaterial({size: 10, sizeAttenuation: false, color: color});
         var dot = new THREE.Points(dotGeometry, dotMaterial1);
         scene.add(dot);
-        console.log(pos);
+        //console.log(pos);
     }
 
     function addPlaneModel(plane) {
@@ -236,19 +236,40 @@
                 controls.Name = selected.name;
 
             } else {
-                if (target > 0) {
+                if (target != null) {
                     //console.log(intersect.geometry.attributes.color.array[target * 3]);
                     //intersect.geometry.attributes.color.array[target * 3] -= 50;
                     //console.log(intersect.geometry.attributes.color.array[target * 3]);
                     //intersect.geometry.attributes.color.array[target * 3 + 1] -= 50;
                     //intersect.geometry.attributes.color.array[target * 3 + 2] -= 50;
                     //intersect.geometry.attributes.color.needsUpdate = true;
-                    console.log(target);
-                    var pos = new THREE.Vector3(intersect.geometry.attributes.position.array[target * 3],
-                            intersect.geometry.attributes.position.array[target * 3 + 1],
-                            intersect.geometry.attributes.position.array[target * 3 + 2]);
-                    addDot(pos, "#ffffff");
-                    console.log(pos);
+                    //console.log(target);
+                    //var pos = new THREE.Vector3(intersect.geometry.attributes.position.array[target * 3],
+                            //intersect.geometry.attributes.position.array[target * 3 + 1],
+                            //intersect.geometry.attributes.position.array[target * 3 + 2]);
+                    //var pos = raycaster.intersectObjects(scene.children)[0].point;
+                    var min = 100500;
+                    var aim;
+                    for (var i = 0; i < Models.length; ++i) {
+                        if (Models[i].contour != null) {
+                            for (var j = 0; j < Models[i].contour.children.length; ++j) {
+                                var child = Models[i].contour.children[j];
+                                var vertices = child.geometry.vertices;
+                                for (var ii = 0; ii < vertices.length; ++ii) {
+                                    var vtx = vertices[ii].clone().applyMatrix4(Models[i].contour.matrix);
+                                    var len = target.distanceTo(vtx);
+                                    if (len < min) {
+                                        min = len;
+                                        aim = vtx;
+                                        //addDot(aim, "#ffffff")
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    addDot(aim, "#ffffff");
+                    console.log(aim);
                 }
             }
 
@@ -399,6 +420,17 @@
         addDot(new THREE.Vector3(-0.512624853849411, 0.3009016036987305, -0.5766776978969574), "#00ff00");
         addDot(new THREE.Vector3(-0.4996225208044052, 0.47431468963623047, -0.5573525309562684), "#00ff00");
         addDot(new THREE.Vector3(-0.487599116563797, 0.6040460586547851, -0.31097488254308703), "#00ff00");
+        addDot(new THREE.Vector3(-0.4678531885147095, 0.12068998906761408, -0.356056934222579), "#00ff00");
+        addDot(new THREE.Vector3(-0.4553383571692534, 0.007564563538395741, 0.09470199172460558), "#00ff00");
+        addDot(new THREE.Vector3(-0.43309328462345753, 0.010540126199135247, 0.08628706396263855), "#00ff00");
+
+        addDot(new THREE.Vector3(-0.26999595407221727, 0.22636731771151464, -0.1951278428590087), "#00ff00");
+        addDot(new THREE.Vector3(-0.32922617370814544, 0.22575899185619744, -0.18100573858592536), "#00ff00");
+
+        addDot(new THREE.Vector3(-0.03228890671296432, 0.21124361360170366, -0.23191118365251942), "#00ff00");
+        addDot(new THREE.Vector3(-0.08069575970505798, 0.18365604176360548, -0.1896896787209305), "#00ff00");
+
+
         /*hideAll();
         
         for (var i = 0; i < Models.length; ++i) {
@@ -709,7 +741,8 @@
                 //v1.sub(point);
                 //console.log(v1);
                 var min = 1005000;
-                target = -1;
+                target = point;
+                /*
                 if (v1.sub(point).length() < min) {
                     min = v1.length();
                     target = indices.a;
@@ -724,7 +757,7 @@
                     min = v3.length();
                     target = indices.c;
                 }
-
+                */
                 //console.log(min);
 
             } else {
