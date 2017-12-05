@@ -68,11 +68,11 @@ function Model(arrays, name, color) {
         this.scene = scene;
     }
 
-    this.getBasisFromFile = function() 
+    this.getBasisFromFile = function(endName) 
     {
         this.movable = true;
         this.basis = loader.load("icosahedron.obj", 2);
-        this.endBasis = loader.load("icosahedron_transformed.obj", 2);
+        this.endBasis = loader.load(endName, 2);
         for (var i = 0; i < this.basis.length; ++i) 
         {
             var b = this.basis[i];
@@ -690,9 +690,11 @@ function Heart_cycle(data, cur) {
 }
 
 function addMeshesControl() {
-    lv.getBasisFromFile();
-    rv.getBasisFromFile();
-    heart.getBasisFromFile();
+    lv.getBasisFromFile("ico_lv.obj");
+    mitral.getBasisFromFile("ico_lv.obj");
+    rv.getBasisFromFile("ico_rv.obj");
+    tricuspid.getBasisFromFile("ico_rv.obj");
+    heart.getBasisFromFile("ico_h.obj");
 
 }
 
