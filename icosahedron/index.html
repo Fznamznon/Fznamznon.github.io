@@ -107,14 +107,7 @@
         planeMesh.translateOnAxis(p4.normalize(), -0.2);
     }
 
-    function addDot(pos, color) {
-        var dotGeometry = new THREE.Geometry();
-        dotGeometry.vertices.push(pos);
-        var dotMaterial1 = new THREE.PointsMaterial({size: 10, sizeAttenuation: false, color: color});
-        var dot = new THREE.Points(dotGeometry, dotMaterial1);
-        scene.add(dot);
-        console.log(pos);
-    }
+    
 
     function addPlaneModel(plane) {
 
@@ -156,6 +149,14 @@
 
     }
 
+	function addDot(pos, color) {
+        var dotGeometry = new THREE.Geometry();
+        dotGeometry.vertices.push(pos);
+        var dotMaterial1 = new THREE.PointsMaterial({size: 10, sizeAttenuation: false, color: color});
+        var dot = new THREE.Points(dotGeometry, dotMaterial1);
+        scene.add(dot);
+        console.log(pos);
+    }
 
     function refreshScene() {
         for (var i = 0; i < Models.length; ++i) {
@@ -369,7 +370,7 @@
         heart_arteries.visible = false;
         refreshScene();
 
-
+        
         //hideAll();
         //heart.visible = true;
         //refreshScene();

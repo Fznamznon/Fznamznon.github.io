@@ -68,15 +68,15 @@ function Model(arrays, name, color) {
         this.scene = scene;
     }
 
-    this.getBasisFromFile = function(endName) 
+    this.getBasisFromFile = function(startName, endName, additionalStart, additionalEnd, pointholder) 
     {
         this.movable = true;
-        this.basis = loader.load("icosahedron.obj", 2);
+        this.basis = loader.load(startName, 2);
         this.endBasis = loader.load(endName, 2);
         for (var i = 0; i < this.basis.length; ++i) 
         {
             var b = this.basis[i];
-            b.push(avg.slice());
+            b.push(pointholder.slice());
             var vec = new Array(4);
             for (var j = 0; j < 4; ++j)
             {
@@ -84,8 +84,17 @@ function Model(arrays, name, color) {
             }
             this.startBasis.push(vec);
             b = this.endBasis[i];
-            b.push(avg.slice());
+            b.push(pointholder.slice());
         }
+
+        if (additionalStart != null) 
+        {
+            this.basis.push(loader.load(additionalStart, 2));
+            this.endBasis.push(loader.load(additionalEnd, 2));
+            this.startBasis.push(loader.load(additionalStart, 2));
+
+        }
+
     }
 
     this.addBasis = function (b1, b2, b3, b4) {
@@ -314,16 +323,22 @@ function Model(arrays, name, color) {
                 var y = Mesh.points[i + 1];
                 var z = Mesh.points[i + 2];
                 var bc = this.getBc(x, y, z, this.startBasis[j]);
+                var ind = i / 3;
 
                 if (bc[0] >= 0 && bc[1] >= 0 && bc[2] >= 0 && bc[3] >= 0) 
                 {
-                    var ind = i / 3;
                     this.indices[j].push(ind);
                     Mesh.BC[ind * 4] = bc[0];
                     Mesh.BC[ind * 4 + 1] = bc[1];
                     Mesh.BC[ind * 4 + 2] = bc[2];
                     Mesh.BC[ind * 4 + 3] = bc[3];
                     m = true;
+                }
+                else 
+                {
+                    //addDot(new THREE.Vector3(x, y ,z), "#ffffff", this.scene);
+                    console.log("vtx" + ind.toString());
+
                 }
             }
         }
@@ -690,11 +705,15 @@ function Heart_cycle(data, cur) {
 }
 
 function addMeshesControl() {
-    lv.getBasisFromFile("ico_lv.obj");
-    mitral.getBasisFromFile("ico_lv.obj");
-    rv.getBasisFromFile("ico_rv.obj");
-    tricuspid.getBasisFromFile("ico_rv.obj");
-    heart.getBasisFromFile("ico_h.obj");
+    //lv.getBasisFromFile("ico_lv.obj");
+    //mitral.getBasisFromFile("ico_lv.obj");
+    //rv.getBasisFromFile("ico_rv.obj");
+    //tricuspid.getBasisFromFile("ico_rv.obj");
+    heart.getBasisFromFile("icosahedron.obj", "ico_h.obj", null, null, avg);
+    lv.getBasisFromFile("2_s.obj", "lv_f.obj", null, null, lvAVG);
+    mitral.getBasisFromFile("2_s.obj", "3_f.obj",
+        null, null, lvAVG);
+
 
 }
 
