@@ -713,8 +713,8 @@ function addMeshesControl() {
     lv.getBasisFromFile("2_s.obj", "lv_f.obj", null, null, lvAVG);
     mitral.getBasisFromFile("2_s.obj", "3_f.obj",
         null, null, lvAVG);
-	rv.getBasisFromFile("4_s.obj", "5_f.obj", null, null, rvAVG);
-	tricuspid.getBasisFromFile("4_s.obj", "tricusp_finish_new.obj",
+	rv.getBasisFromFile("rv_start_new.obj", "5_f.obj", null, null, rvAVG);
+	tricuspid.getBasisFromFile("rv_start_new.obj", "tricusp_finish_new.obj",
         null, null, rvAVG);
 
 }
