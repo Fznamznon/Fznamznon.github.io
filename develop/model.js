@@ -325,7 +325,7 @@ function Model(arrays, name, color) {
                 var bc = this.getBc(x, y, z, this.startBasis[j]);
                 var ind = i / 3;
 
-                if (bc[0] > 0 && bc[1] > 0 && bc[2] > 0 && bc[3] > 0) 
+                if (bc[0] >= 0 && bc[1] >= 0 && bc[2] >= 0 && bc[3] >= 0)
                 {
                     this.indices[j].push(ind);
                     Mesh.BC[ind * 4] = bc[0];
@@ -337,7 +337,8 @@ function Model(arrays, name, color) {
                 else 
                 {
                     //addDot(new THREE.Vector3(x, y ,z), "#ffffff", this.scene);
-                    console.log("vtx" + ind.toString());
+                    if (this.name == "Tricuspid_Valve")
+						console.log("vtx" + ind.toString());
 
                 }
             }
