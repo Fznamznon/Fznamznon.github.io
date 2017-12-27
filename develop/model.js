@@ -325,7 +325,7 @@ function Model(arrays, name, color) {
                 var bc = this.getBc(x, y, z, this.startBasis[j]);
                 var ind = i / 3;
 
-                if (bc[0] >= 0 && bc[1] >= 0 && bc[2] >= 0 && bc[3] >= 0) 
+                if (bc[0] > 0 && bc[1] > 0 && bc[2] > 0 && bc[3] > 0) 
                 {
                     this.indices[j].push(ind);
                     Mesh.BC[ind * 4] = bc[0];
